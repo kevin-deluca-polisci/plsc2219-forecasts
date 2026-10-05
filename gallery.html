@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Forecasts | PLSC 2219</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .charts h3 { margin: 0 0 6px; font-size: 16px; }
+  .charts svg { display: block; width: 100%; height: auto; }
+  .charts .grid { stroke: var(--grid); }
+  .charts .tick { fill: var(--ink-3); font-size: 11px; }
+  .charts .maj { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 3; }
+  .charts .majlab { fill: var(--ink); font-size: 11px; }
+  .charts .name { fill: var(--ink-2); font-size: 12px; }
+  .charts .name.cls { fill: var(--ink); font-weight: 700; }
+  .charts .rng { stroke-width: 3; stroke-linecap: round; }
+  .charts .hit { fill: transparent; cursor: pointer; }
+  .charts g.row:hover .hit { fill: var(--grid); }
+  th.sort { cursor: pointer; user-select: none; }
+  tr.clsrow td { background: var(--empty); }
+  .key { display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--likely-d); display: inline-block; }
+  @media (max-width: 760px) { .summary, .charts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <p class="kicker">PLSC 2219 &middot; 2026 midterms</p>
+    <h1>Student forecasts</h1>
+    <p class="tagline">Forecasts built by students in the course, next to the class model. Each student chose to be listed, under a nickname.</p>
+    <p class="asof"><span id="count"></span> <span id="live-note">Numbers are read from each student's site when you open this page, so they reflect each forecaster's latest upload. The gallery freezes at the forecast deadline, 11:59pm Eastern on Sunday, November 1.</span></p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="frozen" class="banner banner-info" hidden></div>
+  <p id="loading" class="note">Loading&hellip;</p>
+  <section class="summary" id="summary" aria-label="Summary"></section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Seat forecasts side by side</h2>
+      <p class="note">Each row is one forecaster: the dot is their median seat count and the bar is their 80% range. Blue means the median gives Democrats a majority; red means it doesn't.
+        <span class="key"><i class="dot" style="background:var(--likely-d)"></i>own uncertainty</span><span class="key"><i class="dot"></i>default uncertainty (no seat_sims.csv yet)</span></p>
+    </div>
+    <div class="charts"><div id="chart-house"></div><div id="chart-senate"></div></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>All forecasts</h2>
+      <p class="note">Click a column to sort. Projected seats count the party favored in each race; the median, range and chances come from each forecaster's simulations.</p>
+    </div>
+    <div class="table-wrap"><table id="table"></table></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Where forecasters disagree</h2>
+      <p class="note">Races where the student forecasts split most evenly between the parties. Margins are in points, Democratic share minus Republican share.</p>
+    </div>
+    <div id="split"></div>
+  </section>
+
+  <p id="errors" class="note" hidden></p>
+  <p><a href="./">See the class model's site</a> &middot; <a href="https://kevinmdeluca.com/forecast/class/">Class forecast details</a> &middot; <a href="https://kevinmdeluca.com/forecast/">Forecast tracker</a></p>
+</main>
+
+<footer class="site-foot"><div class="wrap">
+  <p class="fine">These are student class projects, shown as their authors posted them and not reviewed for accuracy. They are not affiliated with any campaign, party or news organization.</p>
+</div></footer>
+
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="assets/core.js"></script>
+<script src="assets/gallery.js"></script>
+</body>
+</html>
