@@ -1,0 +1,41 @@
+# Freezes the class gallery at the forecast deadline (Sunday Nov 1, 11:59pm Eastern).
+# Runs on its own shortly after the deadline, and again later that morning in case GitHub delays or
+# skips the first run. Both runs produce the same snapshot, because the script looks up what each
+# student's site was serving AT the deadline, not when the job happens to run.
+# You can also run it by hand: Actions tab -> "Freeze gallery" -> Run workflow.
+name: Freeze gallery
+
+on:
+  schedule:
+    - cron: "30 5 2 11 *"    # Nov 2, 05:30 UTC = Nov 2, 12:30am Eastern
+    - cron: "0 14 2 11 *"    # Nov 2, 14:00 UTC = 9:00am Eastern (backup run)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Save each student's files as of the deadline
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python tools/freeze_gallery.py
+      - name: Commit the snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add freeze.json snapshots
+          if git diff --cached --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Freeze gallery at the Nov 1 forecast deadline"
+          git push
+      - name: Republish the gallery site
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "Pages will rebuild on its own."
