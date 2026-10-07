@@ -28,12 +28,12 @@
     .then(function (res) {
       races = res[0]; notup = res[1]; frozen = res[3];
       if (frozen) {
-        $("frozen").innerHTML = "<strong>Frozen at the deadline.</strong> These are the forecasts each site was showing at 11:59pm Eastern on Sunday, November 1. Changes made after that do not appear here.";
+        $("frozen").innerHTML = "<strong>Frozen at the deadline.</strong> Forecasts as each site showed them at 11:59 pm Eastern on Sunday, November 1.";
         $("frozen").hidden = false;
         $("live-note").textContent = "";
       }
       var list = res[2].filter(function (r) { return r.forecaster_name && /^https:\/\//.test(r.url || ""); });
-      $("count").textContent = list.length ? list.length + " student forecast" + (list.length === 1 ? "" : "s") + " listed." : "No student sites listed yet.";
+      $("count").textContent = list.length ? list.length + " forecast" + (list.length === 1 ? "" : "s") + " listed." : "No forecasts listed yet.";
       // the class model first (this repo's own files), then each student, one at a time so the page stays responsive
       var jobs = [{ name: "Class model", url: "class-model.html", data: "./", isClass: true }].concat(list.map(function (r) {
         var job = { name: r.forecaster_name, url: slash(r.url), data: slash(r.data_url || r.url) };
@@ -62,7 +62,7 @@
           if (!res[0]) { e.error = "no forecast.csv found yet"; }
           else {
             var A = FC.analyze(races, notup, res[0], res[1]);
-            if (!A.S) e.error = "forecast.csv has problems the site can't work around";
+            if (!A.S) e.error = "forecast.csv has errors";
             else {
               e.A = A; e.asof = A.asof; e.own = !A.S.isDefault;
               e.hD = A.races.filter(function (r) { return r.office === "house" && r.share > 0.5; }).length;
@@ -101,10 +101,10 @@
   function summary(ok) {
     var html = "";
     if (cls && !cls.error) html += cardHTML("Class model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class.");
-    if (ok.length) html += cardHTML("Student average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
+    if (ok.length) html += cardHTML("Forecaster average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
       Math.round(quant(ok.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
-      "Average chance of a Democratic majority across " + ok.length + " student forecast" + (ok.length === 1 ? "" : "s") + "; seats are the middle student's median.");
-    else html += "<div class='placeholder'><strong>Student forecasts appear here</strong> as students choose to be listed. Each one is added next to the class model, with an average across all students.</div>";
+      "Average chance of a Democratic majority across " + ok.length + " forecast" + (ok.length === 1 ? "" : "s") + "; seats are the middle forecaster's median.");
+    else html += "<div class='placeholder'><strong>Listed forecasts appear here</strong> next to the class model, with an average across forecasters.</div>";
     $("summary").innerHTML = html;
   }
   function cardHTML(lab, ph, ps, mh, ms, note) {
@@ -180,7 +180,7 @@
         (e.flag ? " <span class='badge' title='The site shows a warning about this forecast file'>check file</span>" : "") + "</td>" +
         "<td class='r num'>" + e.hD + "</td><td class='r num'>" + Math.round(e.H.med) + " (" + Math.round(e.H.lo) + "–" + Math.round(e.H.hi) + ")</td><td class='r num'>" + pct(e.H.pmaj) + "</td>" +
         "<td class='r num'>" + e.sD + "</td><td class='r num'>" + Math.round(e.Sn.med) + " (" + Math.round(e.Sn.lo) + "–" + Math.round(e.Sn.hi) + ")</td><td class='r num'>" + pct(e.Sn.pmaj) + "</td>" +
-        "<td class='r'>" + (e.own ? "own" : "default") + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
+        "<td class='r'>" + (e.own ? "simulated" : "default") + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
     }).join("");
     $("table").innerHTML = head + "<tbody>" + tb + "</tbody>";
     $("table").querySelectorAll("th.sort").forEach(function (th) {
@@ -194,7 +194,7 @@
   // races where the students split most evenly
   function disagreements(ok) {
     var box = $("split");
-    if (ok.length < 2) { box.innerHTML = "<p class='note'>This table appears once at least two student forecasts are listed.</p>"; return; }
+    if (ok.length < 2) { box.innerHTML = "<p class='note'>This table needs at least two listed forecasts.</p>"; return; }
     var byId = {};
     ok.forEach(function (e) { e.A.races.forEach(function (r) {
       if (FC.isFixed(r) || r.share == null) return;

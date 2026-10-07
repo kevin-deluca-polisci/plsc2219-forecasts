@@ -32,9 +32,9 @@
 <header class="site-head">
   <div class="wrap">
     <p class="kicker"><a href="./" style="color:inherit">Yale 2026 Election Prediction Competition</a></p>
-    <h1>Student forecasts</h1>
-    <p class="tagline">Forecasts from PLSC 2219 students and other Yale students in the competition, next to the class model. Each forecaster chose to be listed, under a nickname.</p>
-    <p class="asof"><span id="count"></span> <span id="live-note">Numbers are read from each student's site when you open this page, so they reflect each forecaster's latest upload. The gallery freezes at the forecast deadline, 11:59pm Eastern on Sunday, November 1.</span></p>
+    <h1>All Forecasts</h1>
+    <p class="tagline">Forecasts from PLSC 2219 students and Yale competition entrants, listed by nickname, with the class model.</p>
+    <p class="asof"><span id="count"></span> <span id="live-note">Numbers come from each forecaster's site and update with each upload until the deadline, 11:59 pm Eastern on Sunday, November 1, when the gallery freezes.</span></p>
   </div>
 </header>
 
@@ -45,16 +45,16 @@
 
   <section class="block">
     <div class="block-head">
-      <h2>Seat forecasts side by side</h2>
-      <p class="note">Each row is one forecaster: the dot is their median seat count and the bar is their 80% range. Blue means the median gives Democrats a majority; red means it doesn't.
-        <span class="key"><i class="dot" style="background:var(--likely-d)"></i>own uncertainty</span><span class="key"><i class="dot"></i>default uncertainty (no seat_sims.csv yet)</span></p>
+      <h2>Forecast Comparisons</h2>
+      <p class="note">Each row is one forecaster: the dot is the median seat count and the bar is the 80% range. Blue: Democratic majority at the median. Red: Republican majority at the median.
+        <span class="key"><i class="dot" style="background:var(--likely-d)"></i>forecaster's simulations</span><span class="key"><i class="dot"></i>default uncertainty</span></p>
     </div>
     <div class="charts"><div id="chart-house"></div><div id="chart-senate"></div></div>
   </section>
 
   <section class="block">
     <div class="block-head">
-      <h2>All forecasts</h2>
+      <h2>Forecast Table</h2>
       <p class="note">Click a column to sort. Projected seats count the party favored in each race; the median, range and chances come from each forecaster's simulations.</p>
     </div>
     <div class="table-wrap"><table id="table"></table></div>
@@ -62,8 +62,8 @@
 
   <section class="block">
     <div class="block-head">
-      <h2>Where forecasters disagree</h2>
-      <p class="note">Races where the student forecasts split most evenly between the parties. Margins are in points, Democratic share minus Republican share.</p>
+      <h2>Split Races</h2>
+      <p class="note">Races where forecasters split most evenly between the parties. Margins are in points (Democratic share minus Republican share).</p>
     </div>
     <div id="split"></div>
   </section>
@@ -73,7 +73,7 @@
 </main>
 
 <footer class="site-foot"><div class="wrap">
-  <p class="fine">These are student class projects, shown as their authors posted them and not reviewed for accuracy. They are not affiliated with any campaign, party or news organization.</p>
+  <p class="fine">Student forecasts, shown as posted, independent of any campaign, party or news organization.</p>
 </div></footer>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
