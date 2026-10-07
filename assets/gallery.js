@@ -35,7 +35,7 @@
       var list = res[2].filter(function (r) { return r.forecaster_name && /^https:\/\//.test(r.url || ""); });
       $("count").textContent = list.length ? list.length + " student forecast" + (list.length === 1 ? "" : "s") + " listed." : "No student sites listed yet.";
       // the class model first (this repo's own files), then each student, one at a time so the page stays responsive
-      var jobs = [{ name: "Class model", url: "./", data: "./", isClass: true }].concat(list.map(function (r) {
+      var jobs = [{ name: "Class model", url: "class-model.html", data: "./", isClass: true }].concat(list.map(function (r) {
         var job = { name: r.forecaster_name, url: slash(r.url), data: slash(r.data_url || r.url) };
         if (frozen && !r.data_url) { // after the freeze, read the saved copy, never the live site
           var f = frozen.entries[slash(r.url)];
@@ -100,7 +100,7 @@
   function mean(a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0) / a.length; }
   function summary(ok) {
     var html = "";
-    if (cls && !cls.error) html += cardHTML("Class model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model we built together in HW4 to HW7.");
+    if (cls && !cls.error) html += cardHTML("Class model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class.");
     if (ok.length) html += cardHTML("Student average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
       Math.round(quant(ok.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
       "Average chance of a Democratic majority across " + ok.length + " student forecast" + (ok.length === 1 ? "" : "s") + "; seats are the middle student's median.");
