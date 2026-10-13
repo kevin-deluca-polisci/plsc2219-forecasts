@@ -14,7 +14,7 @@ window.COMPETITION = {
   // plus an optional site address for the gallery). Paste its share link here.
   submit_form: "",
 
-  // Sign-up deadline for Yale students outside PLSC 2219. Shown on both pages.
+  // Sign-up deadline. Shown on both pages.
   signup_deadline: "Wed., Oct. 28",
 
   // The kickoff event and the election night watch party are not listed on the
