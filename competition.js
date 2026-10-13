@@ -14,13 +14,11 @@ window.COMPETITION = {
   // plus an optional site address for the gallery). Paste its share link here.
   submit_form: "",
 
-  // Kickoff event: date, time and place. Shown on both pages.
-  kickoff: "Late October",
-  kickoff_detail: "Date and place to be announced",
+  // Sign-up deadline for Yale students outside PLSC 2219. Shown on both pages.
+  signup_deadline: "Wed., Oct. 28",
 
-  // Election night watch party.
-  watch_party: "Tue., Nov. 3, 7–9 pm",
-  watch_party_detail: "Place to be announced",
+  // The kickoff event and the election night watch party are not listed on the
+  // site: their dates, times and places go only to people who sign up.
 
   // How people should get in touch.
   contact: "Prof. Kevin DeLuca"
