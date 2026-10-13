@@ -8,7 +8,7 @@ window.COMPETITION = {
 
   // Sign-up form for Yale students outside PLSC 2219 (Yale email, nickname).
   // Paste the Google Form's share link here. Until then, the buttons say the form opens soon.
-  signup_form: "",
+  signup_form: "https://forms.gle/vSs1Y8s63YRp8aUL7",
 
   // Submission form (a Google Form with a file-upload question for forecast.csv,
   // plus an optional site address for the gallery). Paste its share link here.
