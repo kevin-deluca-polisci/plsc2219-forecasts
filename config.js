@@ -26,7 +26,8 @@ window.SITE_CONFIG = {
   //   "Uncertainty combines one national error shared by every race with a separate error for each race. Seat totals come from 10,000 simulated elections.",
   method: [
     "A fundamentals-only model (no polls), built step by step by the class in HW4 to HW7. Each race's predicted Democratic share combines the district's partisan lean (the course PVI), incumbency, and a forecast of the national House vote from presidential approval, gas prices, income and the midterm penalty.",
-    "Uncertainty combines one national error shared by every race with a separate error for each race. Seat totals come from 10,000 simulated elections. Full details are on the class forecast page."
+    "Uncertainty combines one national error shared by every race with a separate error for each race. Seat totals come from 10,000 simulated elections. Full details are on the class forecast page.",
+    "Montana is forecast as the combined non-Republican share (Bankhead plus Bodnar, as a share of the three) and counted as a Republican seat, since the Democrat and the independent split the vote."
   ],
 
   // Your data files. Leave these alone unless you renamed your files.
@@ -39,4 +40,21 @@ window.SITE_CONFIG = {
     tracker: "https://kevinmdeluca.com/forecast/",
     gallery: "https://kevin-deluca-polisci.github.io/plsc2219-forecasts/gallery.html"
   }
+};
+
+// The class-model page (class-model.html) also shows a second version, the class
+// model averaged with the Senate polls. It is the page's default view; add
+// ?model=fundamentals to the address for the class model alone. These settings
+// replace the ones above for that version. It is an instructor reference
+// forecast: students are scored against the class model above.
+window.SITE_CONFIG_POLLS = {
+  forecaster_name: "PLSC 2219 Class Model + Polls",
+  tagline: "The class model averaged with the polls in each Senate race. An instructor reference forecast; entries are scored against the class model.",
+  method: [
+    "The starting point is the class model: each race's Democratic share comes from the district's partisan lean, incumbency, and a forecast of the national House vote (55.1% Democratic) from presidential approval, gas prices, income and the midterm penalty.",
+    "In every Senate race with polls in the last 30 days (25 of the 35), the prediction is the simple average of the class model and the polling average from each race's Wikipedia polling table. House races, which have few public polls, use the class model alone.",
+    "Uncertainty is the class model's: one national error shared by every race plus a separate error for each race. Seat totals come from 10,000 simulated elections. Montana is forecast as the combined non-Republican share (Bankhead plus Bodnar; from the polls, 100 minus Alme's share of the three) and counted as a Republican seat."
+  ],
+  forecast_file: "class_polls/forecast.csv",
+  sims_file: "class_polls/seat_sims.csv"
 };

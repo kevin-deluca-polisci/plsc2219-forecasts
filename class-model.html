@@ -6,6 +6,12 @@
 <title>2026 Midterm Forecast</title>
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="assets/style.css">
+<style>
+  .model-toggle { display: inline-flex; margin: 14px 0 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .model-toggle a { padding: 7px 14px; font-size: 14px; color: var(--ink-2); background: var(--card); text-decoration: none; }
+  .model-toggle a + a { border-left: 1px solid var(--rule); }
+  .model-toggle a.on { background: var(--ink); color: var(--bg); }
+</style>
 </head>
 <body>
 <header class="site-head">
@@ -13,6 +19,10 @@
     <p class="kicker">2026 U.S. House and Senate forecast</p>
     <h1 id="title">My 2026 Midterm Forecast</h1>
     <p id="tagline" class="tagline" hidden></p>
+    <nav class="model-toggle" aria-label="Forecast version">
+      <a id="ver-polls" href="class-model.html">Class model + polls</a>
+      <a id="ver-fund" href="class-model.html?model=fundamentals">Class model</a>
+    </nav>
     <p id="asof" class="asof"></p>
   </div>
 </header>
@@ -82,7 +92,7 @@
 <footer class="site-foot">
   <div class="wrap">
     <nav id="links" class="links"></nav>
-    <p class="fine">A student forecast of the 2026 midterm elections, independent of any campaign, party or news organization.
+    <p class="fine">A course forecast of the 2026 midterm elections, independent of any campaign, party or news organization.
       Race list and candidates: course race file, built from state candidate lists and the CAGE candidate data (Cha, Kuriwaki and Snyder).
       Site template: PLSC 2219.</p>
   </div>
@@ -90,6 +100,16 @@
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="config.js"></script>
+<script>
+  // Default: the class model + polls. ?model=fundamentals shows the class model alone (config.js has both).
+  (function () {
+    var fund = new URLSearchParams(location.search).get("model") === "fundamentals";
+    var cfg = window.SITE_CONFIG || (window.SITE_CONFIG = {}), polls = window.SITE_CONFIG_POLLS || {};
+    if (!fund) Object.keys(polls).forEach(function (k) { cfg[k] = polls[k]; });
+    var on = document.getElementById(fund ? "ver-fund" : "ver-polls");
+    on.classList.add("on"); on.setAttribute("aria-current", "page");
+  })();
+</script>
 <script src="assets/core.js"></script>
 <script src="assets/app.js"></script>
 </body>

@@ -17,7 +17,7 @@
   }
   function marginText(m) { if (Math.abs(m) < 0.05) return "Even"; return (m > 0 ? "D +" : "R +") + Math.abs(m).toFixed(1); }
 
-  var races, notup, entries = [], cls = null, frozen = null;
+  var races, notup, entries = [], cls = null, ref = null, frozen = null; // cls: the class model; ref: class model + polls
 
   function getJSON(path) {
     return fetch(path + "?v=" + Date.now(), { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
@@ -34,8 +34,10 @@
       }
       var list = res[2].filter(function (r) { return r.forecaster_name && /^https:\/\//.test(r.url || ""); });
       $("count").textContent = list.length ? list.length + " forecast" + (list.length === 1 ? "" : "s") + " listed." : "No forecasts listed yet.";
-      // the class model first (this repo's own files), then each student, one at a time so the page stays responsive
-      var jobs = [{ name: "Class model", url: "class-model.html", data: "./", isClass: true }].concat(list.map(function (r) {
+      // the class model and the class model + polls first (this repo's own files), then each student, one at a time so
+      // the page stays responsive. Both are reference rows: neither enters the forecaster average.
+      var jobs = [{ name: "Class model", url: "class-model.html?model=fundamentals", data: "./", isClass: true },
+                  { name: "Class model + polls", short: "Class + polls", url: "class-model.html", data: "class_polls/", isClass: true, isRef: true }].concat(list.map(function (r) {
         var job = { name: r.forecaster_name, url: slash(r.url), data: slash(r.data_url || r.url) };
         if (frozen && !r.data_url) { // after the freeze, read the saved copy, never the live site
           var f = frozen.entries[slash(r.url)];
@@ -58,7 +60,7 @@
     ]).then(function (res) {
       return new Promise(function (done) {
         setTimeout(function () { // let the page repaint between forecasters
-          var e = { name: job.name, url: job.url, isClass: !!job.isClass };
+          var e = { name: job.name, short: job.short, url: job.url, isClass: !!job.isClass, isRef: !!job.isRef };
           if (!res[0]) { e.error = "no forecast.csv found yet"; }
           else {
             var A = FC.analyze(races, notup, res[0], res[1]);
@@ -71,7 +73,7 @@
               e.flag = A.problems.length > 0;
             }
           }
-          if (e.isClass) cls = e; else entries.push(e);
+          if (e.isRef) ref = e; else if (e.isClass) cls = e; else entries.push(e);
           render(); done();
         }, 0);
       });
@@ -84,7 +86,7 @@
     var ok = entries.filter(function (e) { return !e.error; });
     summary(ok);
     $("chart-house").innerHTML = ""; $("chart-senate").innerHTML = "";
-    var rows = (cls && !cls.error ? [cls] : []).concat(ok);
+    var rows = refRows().concat(ok);
     if (rows.length) {
       $("chart-house").appendChild(strip(rows, "H", HOUSE_MAJ, "Democratic House seats"));
       $("chart-senate").appendChild(strip(rows, "Sn", SENATE_MAJ, "Democratic Senate seats"));
@@ -97,10 +99,13 @@
       return "<a href='" + esc(e.url) + "'>" + esc(e.name) + "</a> (" + esc(e.error) + ")"; }).join("; ") : "";
   }
 
+  function refRows() { return [cls, ref].filter(function (e) { return e && !e.error; }); }
+  function rank(e) { return e === cls ? 2 : e === ref ? 1 : 0; }
   function mean(a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0) / a.length; }
   function summary(ok) {
     var html = "";
-    if (cls && !cls.error) html += cardHTML("Class model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class.");
+    if (cls && !cls.error) html += cardHTML("Class model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class. Entries are scored against it.");
+    if (ref && !ref.error) html += cardHTML("Class model + polls", ref.H.pmaj, ref.Sn.pmaj, Math.round(ref.H.med), Math.round(ref.Sn.med), "The class model averaged with the polls in each Senate race. An instructor reference forecast.");
     if (ok.length) html += cardHTML("Forecaster average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
       Math.round(quant(ok.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
       "Average chance of a Democratic majority across " + ok.length + " forecast" + (ok.length === 1 ? "" : "s") + "; seats are the middle forecaster's median.");
@@ -116,7 +121,7 @@
 
   // one row per forecaster: 80% seat range (bar) and median (dot), with the majority line
   function strip(rows, key, maj, label) {
-    rows = rows.slice().sort(function (a, b) { return (b.isClass - a.isClass) || (b[key].med - a[key].med); });
+    rows = rows.slice().sort(function (a, b) { return (rank(b) - rank(a)) || (b[key].med - a[key].med); });
     var lo = Math.floor(Math.min.apply(null, rows.map(function (e) { return e[key].lo; }).concat([maj])) - 3);
     var hi = Math.ceil(Math.max.apply(null, rows.map(function (e) { return e[key].hi; }).concat([maj])) + 3);
     var W = 470, L = 118, R = 12, rowH = 26, top = 24, H = top + rows.length * rowH + 26;
@@ -130,7 +135,7 @@
     rows.forEach(function (e, i) {
       var y = top + i * rowH + rowH / 2, c = e[key], col = c.med >= maj ? "var(--likely-d)" : "var(--likely-r)";
       svg += "<g class='row' data-i='" + i + "'><rect class='hit' x='0' y='" + (y - rowH / 2) + "' width='" + W + "' height='" + rowH + "'></rect>" +
-        "<text class='name" + (e.isClass ? " cls" : "") + "' x='" + (L - 10) + "' y='" + (y + 4) + "' text-anchor='end'>" + esc(e.name.length > 16 ? e.name.slice(0, 15) + "…" : e.name) + "</text>" +
+        "<text class='name" + (e.isClass ? " cls" : "") + "' x='" + (L - 10) + "' y='" + (y + 4) + "' text-anchor='end'>" + esc((e.short || e.name).length > 16 ? (e.short || e.name).slice(0, 15) + "…" : (e.short || e.name)) + "</text>" +
         "<line class='rng' x1='" + x(c.lo) + "' x2='" + x(c.hi) + "' y1='" + y + "' y2='" + y + "' stroke='" + col + "'></line>" +
         "<circle cx='" + x(c.med) + "' cy='" + y + "' r='5.5' fill='" + (e.own ? col : "var(--card)") + "' stroke='" + col + "' stroke-width='2'></circle></g>";
     });
@@ -171,12 +176,12 @@
     ];
     var f = cols.filter(function (c) { return c[0] === sortKey; })[0][2];
     var body = rows.filter(function (e) { return !e.isClass; }).sort(function (a, b) { var x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
-    if (cls && !cls.error) body.unshift(cls);
+    body = refRows().concat(body);
     var head = "<thead><tr>" + cols.map(function (c, i) {
       return "<th class='" + (i ? "r " : "") + "sort' data-k='" + c[0] + "' aria-sort='" + (c[0] === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none") + "'>" +
         c[1] + (c[0] === sortKey ? (sortDir > 0 ? " ▲" : " ▼") : "") + "</th>"; }).join("") + "</tr></thead>";
     var tb = body.map(function (e) {
-      return "<tr" + (e.isClass ? " class='clsrow'" : "") + "><td>" + (e.isClass ? "<strong>Class model</strong>" : "<a href='" + esc(e.url) + "'>" + esc(e.name) + "</a>") +
+      return "<tr" + (e.isClass ? " class='clsrow'" : "") + "><td>" + (e.isClass ? "<a href='" + esc(e.url) + "'><strong>" + esc(e.name) + "</strong></a>" : "<a href='" + esc(e.url) + "'>" + esc(e.name) + "</a>") +
         (e.flag ? " <span class='badge' title='The site shows a warning about this forecast file'>check file</span>" : "") + "</td>" +
         "<td class='r num'>" + e.hD + "</td><td class='r num'>" + Math.round(e.H.med) + " (" + Math.round(e.H.lo) + "–" + Math.round(e.H.hi) + ")</td><td class='r num'>" + pct(e.H.pmaj) + "</td>" +
         "<td class='r num'>" + e.sD + "</td><td class='r num'>" + Math.round(e.Sn.med) + " (" + Math.round(e.Sn.lo) + "–" + Math.round(e.Sn.hi) + ")</td><td class='r num'>" + pct(e.Sn.pmaj) + "</td>" +

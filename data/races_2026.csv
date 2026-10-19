@@ -452,7 +452,7 @@ SEN_ME_2026,senate,ME,,0,2,standard,1,,Troy Jackson,D,Susan Collins,R,R,Susan Co
 SEN_MI_2026,senate,MI,,0,2,standard,1,,Abdul El-Sayed,D,Mike Rogers,R,D,,1,Gary Peters,0,-0.19,0,0,0,
 SEN_MN_2026,senate,MN,,0,2,standard,1,,Peggy Flanagan,D,Michele Tafoya,R,D,,1,Tina Smith,0,2.53,0,0,0,
 SEN_MS_2026,senate,MS,,0,2,standard,1,,Scott Colom,D,Cindy Hyde-Smith,R,R,Cindy Hyde-Smith,0,,0,-10.78,0,0,0,
-SEN_MT_2026,senate,MT,,0,2,standard,1,,Alani Bankhead,D,Kurt Alme,R,R,,1,Steve Daines,0,-9.82,0,0,0,
+SEN_MT_2026,senate,MT,,0,2,combined_D_side,1,,Alani Bankhead; Seth Bodnar,D;I,Kurt Alme,R,R,,1,Steve Daines,0,-9.82,0,0,0,"Combined non-Republican race: predict Bankhead (D) + Bodnar (I) votes as a share of Bankhead + Bodnar + Alme. Plurality rule; the seat is assumed Republican (D and I split the vote), so p_dem_win = 0 and it counts as an R seat."
 SEN_NC_2026,senate,NC,,0,2,standard,1,,Roy Cooper,D,Michael Whatley,R,R,,1,Thom Tillis,0,-1.4,0,0,0,
 SEN_NE_2026,senate,NE,,0,2,independent_D_side,1,,Dan Osborn,I,Pete Ricketts,R,R,Pete Ricketts,0,,0,-10.27,0,0,0,
 SEN_NH_2026,senate,NH,,0,2,standard,1,,Chris Pappas,D,John E. Sununu,R,D,,1,Jeanne Shaheen,0,1.99,0,0,0,

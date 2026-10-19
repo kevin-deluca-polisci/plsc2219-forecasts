@@ -136,7 +136,15 @@
   }
   function sideLabel(name, party, fallback) {
     if (!name) return "<span class='note'>" + fallback + "</span>";
+    var ns = String(name).split(";"), ps = String(party || "").split(";");
+    if (ns.length > 1 && ns.length === ps.length) // a combined side, for example "Bankhead; Bodnar" with "D;I"
+      return ns.map(function (n, i) { return esc(n.trim()) + " (" + esc(ps[i].trim()) + ")"; }).join(" + ");
     return esc(name) + (party && party !== "D" && party !== "R" ? " (" + esc(party) + ")" : "");
+  }
+  // a race forecast as the combined share of several D-side candidates, with the seat counted as Republican
+  function combinedText(r) {
+    return "The forecast is the combined vote share of " + sideLabel(r.dem_candidate, r.d_side_party, "the D side").replace(" + ", " and ") +
+      ". The seat is counted as Republican, since they split the vote.";
   }
   function marginText(r) {
     var m = margin(r);
@@ -204,6 +212,7 @@
     if (useP) h += "<div class='row'><span>D win chance</span><span class='num'>" + pct(r.p) + "</span></div>";
     if (useP && r.lo != null) h += "<div class='row'><span>D share, 80%</span><span class='num'>" + pct(r.lo, 1) + " to " + pct(r.hi, 1) + "</span></div>";
     if (r.rating) h += "<div class='row'><span>Rating</span><span><i class='sw r-" + r.rating.key + "'></i>" + r.rating.label + "</span></div>";
+    if (r.race_type === "combined_D_side") h += "<p class='note' style='font-size:12px;margin-top:6px'>" + combinedText(r) + "</p>";
     return h;
   }
   function attachTip(el, r, useP) {
@@ -244,6 +253,9 @@
     });
     $("senate-note").textContent = useP ? "Each state shows the Democratic side's chance of winning. Gray states have no Senate race in 2026."
       : "Each state shows the predicted margin. Gray states have no Senate race in 2026.";
+    senate.filter(function (r) { return r.race_type === "combined_D_side"; }).forEach(function (r) {
+      $("senate-note").innerHTML = esc($("senate-note").textContent) + " " + esc(STATE_NAMES[r.state]) + ": " + combinedText(r);
+    });
   }
 
   // ---------------------------------------------------------------- house grid
