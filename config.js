@@ -12,7 +12,7 @@ window.SITE_CONFIG = {
   forecaster_name: "PLSC 2219 Class Model",
 
   // One short line under the name (optional).
-  tagline: "The forecast PLSC 2219 builds in class, and an example of a forecast site.",
+  tagline: "PLSC 2219 Fundamentals Model",
 
   // A plain-language description of YOUR model, in your own words. Each line in
   // quotes is one paragraph, followed by a comma. Two or three short paragraphs:
@@ -49,7 +49,7 @@ window.SITE_CONFIG = {
 // forecast: students are scored against the class model above.
 window.SITE_CONFIG_POLLS = {
   forecaster_name: "PLSC 2219 Class Model + Polls",
-  tagline: "The class model averaged with the polls in each Senate race. An instructor reference forecast; entries are scored against the class model.",
+  tagline: "PLSC 2219 Fundamentals Model averaged with Senate Polls",
   method: [
     "The starting point is the class model: each race's Democratic share comes from the district's partisan lean, incumbency, and a forecast of the national House vote (55.1% Democratic) from presidential approval, gas prices, income and the midterm penalty.",
     "In every Senate race with polls in the last 30 days (25 of the 35), the prediction is the simple average of the class model and the polling average from each race's Wikipedia polling table. House races, which have few public polls, use the class model alone.",
