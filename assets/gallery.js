@@ -105,7 +105,7 @@
   function summary(ok) {
     var html = "";
     if (cls && !cls.error) html += cardHTML("Class model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class. Entries are scored against it.");
-    if (ref && !ref.error) html += cardHTML("Class model + polls", ref.H.pmaj, ref.Sn.pmaj, Math.round(ref.H.med), Math.round(ref.Sn.med), "The class model averaged with the polls in each Senate race. An instructor reference forecast.");
+    if (ref && !ref.error) html += cardHTML("Class model + polls", ref.H.pmaj, ref.Sn.pmaj, Math.round(ref.H.med), Math.round(ref.Sn.med), "The class model averaged with the polls in each race that has them. An instructor reference forecast.");
     if (ok.length) html += cardHTML("Forecaster average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
       Math.round(quant(ok.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
       "Average chance of a Democratic majority across " + ok.length + " forecast" + (ok.length === 1 ? "" : "s") + "; seats are the middle forecaster's median.");

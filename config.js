@@ -49,16 +49,16 @@ window.SITE_CONFIG = {
 };
 
 // The class-model page (class-model.html) also shows a second version, the class
-// model averaged with the Senate polls. It is the page's default view; add
+// model averaged with the polls (Senate and House). It is the page's default view; add
 // ?model=fundamentals to the address for the class model alone. These settings
 // replace the ones above for that version. It is an instructor reference
 // forecast: students are scored against the class model above.
 window.SITE_CONFIG_POLLS = {
   forecaster_name: "PLSC 2219 Class Model + Polls",
-  tagline: "PLSC 2219 Fundamentals Model averaged with Senate Polls",
+  tagline: "PLSC 2219 Fundamentals Model averaged with Polls",
   method: [
     "The starting point is the class model: each race's Democratic share comes from the district's partisan lean, incumbency, and a forecast of the national House vote (55.1% Democratic) from presidential approval, gas prices, income and the midterm penalty.",
-    "In every Senate race with polls in the last 30 days (25 of the 35), the prediction is the simple average of the class model and the polling average from each race's Wikipedia polling table. House races, which have few public polls, use the class model alone.",
+    "In every race with polls, the prediction is the simple average of the class model and the race's polling average. In the Senate (25 of the 35 races), the polling average combines the polls from the last 30 days in each race's Wikipedia polling table with the average of the polling averages reported there (RealClearPolitics, 270toWin, Race to the WH and others), taking the mean of the two where both exist. In the House (108 districts), it is Race to the WH's district polling average. Races without polls use the class model alone.",
     "Uncertainty is the class model's: one national error shared by every race plus a separate error for each race. Seat totals come from 10,000 simulated elections. Montana is forecast as the combined non-Republican share (Bankhead plus Bodnar; from the polls, 100 minus Alme's share of the three) and counted as a Republican seat."
   ],
   forecast_file: "class_polls/forecast.csv",
