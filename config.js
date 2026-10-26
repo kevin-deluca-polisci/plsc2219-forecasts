@@ -34,6 +34,12 @@ window.SITE_CONFIG = {
   forecast_file: "forecast.csv",
   sims_file: "seat_sims.csv",
 
+  // House map: The Downballot's hex cartogram of the 2026 districts, from Shiro
+  // Kuriwaki's fourthirtyfive R package (shp_hex_2027), converted to SVG paths.
+  // Both versions of the class-model page use it. Remove this line for the
+  // state-by-state grid.
+  house_hexmap: "data/house_hexmap_2026.json",
+
   // Course links. Leave these as they are.
   links: {
     class_forecast: "https://kevinmdeluca.com/forecast/class/",

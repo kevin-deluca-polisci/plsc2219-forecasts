@@ -116,6 +116,21 @@ a { color: var(--focus); }
 .srow .sl { font-size: 12px; font-weight: 600; color: var(--ink-2); line-height: 16px; }
 .tiles { display: flex; flex-wrap: wrap; gap: 2px; }
 .t { width: 16px; height: 16px; border-radius: 3px; cursor: pointer; }
+/* house hex map (class-model page; config.js house_hexmap) */
+.house-hex svg { display: block; width: 100%; height: auto; max-width: 980px; }
+.house-hex path.d { stroke: var(--card); stroke-width: 0.7; cursor: pointer; }
+.house-hex path.d:hover, .house-hex path.d:focus { stroke: var(--ink); stroke-width: 1.6; outline: none; }
+.house-hex .hatch path { fill: url(#hex-hatch); pointer-events: none; }
+.house-hex .states path { fill: none; stroke: var(--ink-2); stroke-width: 1.1; stroke-linejoin: round; pointer-events: none; }
+.house-hex .labels text { font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; fill: var(--ink);
+  stroke: var(--card); stroke-width: 2.6px; paint-order: stroke; pointer-events: none; }
+.house-hex path.none { fill: var(--empty); }
+@media (max-width: 600px) { .house-hex .labels { display: none; } .house-hex path.d { stroke-width: 0.5; } }
+.house-hex path.r-safe-d { fill: var(--safe-d); } .house-hex path.r-likely-d { fill: var(--likely-d); }
+.house-hex path.r-lean-d { fill: var(--lean-d); } .house-hex path.r-toss { fill: var(--toss); }
+.house-hex path.r-lean-r { fill: var(--lean-r); } .house-hex path.r-likely-r { fill: var(--likely-r); }
+.house-hex path.r-safe-r { fill: var(--safe-r); }
+.note .credit { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-3); }
 .fixed { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,0.45) 3px 4.5px); }
 
 .r-safe-d { background-color: var(--safe-d); color: #fff; }

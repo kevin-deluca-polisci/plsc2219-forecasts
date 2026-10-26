@@ -33,6 +33,7 @@
   var STATE_NAMES = {AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming"};
 
   var $ = function (id) { return document.getElementById(id); };
+  var HEX = null; // the House hex map, when config.js names one
   var esc = FC.esc, getCSV = FC.getCSV, num = FC.num, quant = FC.quant, isFixed = FC.isFixed;
   function pct(x, d) { return (100 * x).toFixed(d == null ? 0 : d) + "%"; }
 
@@ -51,8 +52,11 @@
     getCSV("data/races_2026.csv"),
     getCSV("data/senate_seats_not_up_2026.csv"),
     getCSV(fFile).catch(function () { return null; }),
-    sFile ? getCSV(sFile).catch(function () { return null; }) : Promise.resolve(null)
-  ]).then(function (res) { build(res[0], res[1], res[2], res[3]); })
+    sFile ? getCSV(sFile).catch(function () { return null; }) : Promise.resolve(null),
+    // optional geographic hex map of the House districts (config: house_hexmap); without it, the state grid
+    CFG.house_hexmap ? fetch(CFG.house_hexmap, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+                     : Promise.resolve(null)
+  ]).then(function (res) { HEX = res[4]; build(res[0], res[1], res[2], res[3]); })
     .catch(function (e) {
       showEmpty("<p><strong>The page could not load its data.</strong> The site loads its data from its GitHub Pages address; browsers block it when <code>index.html</code> is opened as a file.</p><p class='note'>" + esc(e) + "</p>");
     });
@@ -259,7 +263,47 @@
   }
 
   // ---------------------------------------------------------------- house grid
+  // ---------------------------------------------------------------- house hex map
+  // One shape per district, each the same size, placed roughly where it is (The Downballot's
+  // cartogram). Drawn when config.js sets house_hexmap and the file loads; otherwise the state grid.
+  function houseHex(house, useP) {
+    var box = $("house-grid"), NS = "http://www.w3.org/2000/svg", byId = {};
+    house.forEach(function (r) { byId[r.race_id] = r; });
+    box.innerHTML = ""; box.className = "house-hex";
+    var svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", HEX.viewBox.join(" "));
+    svg.setAttribute("role", "group"); svg.setAttribute("aria-label", "House districts on a map");
+    svg.innerHTML = "<defs><pattern id='hex-hatch' width='4' height='4' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>" +
+      "<rect width='1.4' height='4' fill='rgba(255,255,255,0.5)'></rect></pattern></defs>";
+    var gD = document.createElementNS(NS, "g"), gF = document.createElementNS(NS, "g"), gS = document.createElementNS(NS, "g"), gL = document.createElementNS(NS, "g");
+    gF.setAttribute("class", "hatch"); gS.setAttribute("class", "states"); gL.setAttribute("class", "labels");
+    Object.keys(HEX.districts).forEach(function (id) {
+      var r = byId[id], p = document.createElementNS(NS, "path");
+      p.setAttribute("d", HEX.districts[id]);
+      p.setAttribute("class", "d " + (r && r.rating ? "r-" + r.rating.key : "none"));
+      gD.appendChild(p);
+      if (!r) return;
+      attachTip(p, r, useP);
+      if (isFixed(r)) { var h = document.createElementNS(NS, "path"); h.setAttribute("d", HEX.districts[id]); gF.appendChild(h); }
+    });
+    var count = {};
+    house.forEach(function (r) { count[r.state] = (count[r.state] || 0) + 1; });
+    Object.keys(HEX.states).forEach(function (st) {
+      var p = document.createElementNS(NS, "path"); p.setAttribute("d", HEX.states[st]); gS.appendChild(p);
+      var xy = HEX.labels[st];
+      if (xy && count[st] >= 4) { // label the states big enough to hold one
+        var t = document.createElementNS(NS, "text"); t.setAttribute("x", xy[0]); t.setAttribute("y", xy[1]); t.textContent = st; gL.appendChild(t);
+      }
+    });
+    [gD, gF, gS, gL].forEach(function (g) { svg.appendChild(g); });
+    box.appendChild(svg);
+    var note = $("house-note");
+    if (note) note.innerHTML = "One hexagon-based shape per district, each the same size and placed roughly where the district is. Hover or tap a district for details." +
+      " <span class='credit'>Map: <a href='https://the-db.co/maps'>The Downballot</a>, via the <a href='https://www.shirokuriwaki.com/fourthirtyfive/'>fourthirtyfive</a> R package.</span>";
+  }
+
   function houseGrid(house, useP) {
+    if (HEX && HEX.districts && HEX.states) return houseHex(house, useP);
     var box = $("house-grid"), byState = {};
     house.forEach(function (r) { (byState[r.state] = byState[r.state] || []).push(r); });
     box.innerHTML = "";
