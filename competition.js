@@ -42,6 +42,24 @@ window.COMPETITION = {
   ],
   submit_closes: "2026-11-02T00:00:00-05:00",
 
+  // JUST FOR FUN (not competition entries): anyone can download the blank
+  // downloads/forecast.csv, fill in any races, and email it with this subject.
+  // From fun_closes on (6 pm Eastern on Election Day, before the first polls
+  // close) the button reads "Closed".
+  fun_subject: "2026 forecast, just for fun",
+  fun_body: [
+    "Hi Prof. DeLuca,",
+    "",
+    "Here are my 2026 predictions, just for fun (not a competition entry).",
+    "",
+    "Name or nickname:",
+    "",
+    "Attached: forecast.csv",
+    "",
+    "(Attach your file before sending: this email does not attach it for you.)"
+  ],
+  fun_closes: "2026-11-03T18:00:00-05:00",
+
   // The kickoff event and the election night watch party are not listed on the
   // site: their dates, times and places go only to people who sign up.
 
@@ -77,4 +95,12 @@ window.COMPETITION = {
   each("[data-submit-subject]", function (el) { el.textContent = C.submit_subject || ""; });
   each("[data-submit-body]", function (el) { el.textContent = body; });
   each("[data-submit-help]", function (el) { el.hidden = !C.submit_email || closed("submit_closes"); });
+
+  // Just for fun: the same email address, its own subject and text.
+  each("a[data-fun-submit]", function (a) {
+    if (closed("fun_closes")) return off(a, "Closed");
+    if (!C.submit_email) return off(a, "Opens soon");
+    a.href = "mailto:" + C.submit_email + "?subject=" + encodeURIComponent(C.fun_subject || "") + "&body=" + encodeURIComponent((C.fun_body || []).join("\n"));
+  });
+  each("[data-fun-subject]", function (el) { el.textContent = C.fun_subject || ""; });
 })();
