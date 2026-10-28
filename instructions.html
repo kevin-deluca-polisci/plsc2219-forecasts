@@ -24,7 +24,7 @@
   <p class="kicker">Instructions</p>
   <h1 class="fr" style="color:var(--blue);font-size:clamp(44px,7vw,76px);line-height:.95;margin:10px 0 16px">How to Enter</h1>
   <div class="prose">
-    <p>These steps are for Yale students outside PLSC 2219. Students in the course follow the forecast assignment on Canvas and are entered automatically.</p>
+    <p>Steps 1 to 3 are for Yale students outside PLSC 2219; students in the course already have the data and the forecast assignment. Everyone submits the same way, by email (step 4).</p>
   </div>
 </section>
 
@@ -33,18 +33,23 @@
     <li><b>Sign up</b>Sign up with a Yale email address and a forecaster nickname by <span data-c="signup_deadline">Wed., Oct. 28</span>. Spots are limited. You'll get the details of the kickoff event and the election night watch party when you sign up.</li>
     <li><b>Get the data</b>Entrants receive a shared folder with the course data and an entrant guide covering the files and the forecast format.</li>
     <li><b>Build a forecast</b>Predict the Democratic share of the two-party vote in each of the 470 House and Senate races.</li>
-    <li><b>Submit</b>Upload <code>forecast.csv</code> through the submission form by <b>Sunday, Nov. 1, 11:59 pm Eastern</b>.</li>
+    <li><b>Submit</b>Email your <code>forecast.csv</code> by <b>Sunday, Nov. 1, 11:59 pm Eastern</b>. The Submit button opens an email with the details to fill in; attach your file before sending.</li>
   </ol>
   <div class="btns" style="margin-top:20px">
     <a class="btn solid" data-signup href="#">Sign up</a>
     <a class="btn ghost" data-submit href="#">Submit your forecast</a>
   </div>
+  <details class="prose" data-submit-help hidden style="margin-top:14px">
+    <summary>Email app didn't open?</summary>
+    <p>Send an email to <a data-submit-email href="#"></a> with the subject <b data-submit-subject></b> and this text, filled in, with <code>forecast.csv</code> attached:</p>
+    <pre data-submit-body style="white-space:pre-wrap"></pre>
+  </details>
 </section>
 
 <section class="blk"><div class="cols">
   <div class="prose">
     <h2>Submission</h2>
-    <p>One file, <code>forecast.csv</code>, with a predicted vote share for every race. Win probabilities, ranges and simulations are optional.</p>
+    <p>One file, <code>forecast.csv</code>, with a predicted vote share for every race, attached to an email to Prof. DeLuca (step 4). Win probabilities, ranges and simulations are optional.</p>
     <p>The entrant guide covers the file format, races with special rules, and a script that checks the file before submission.</p>
     <h2 style="margin-top:26px">Forecast Sites (Optional)</h2>
     <p>The <a href="https://github.com/kevin-deluca-polisci/plsc2219-forecast-template">course website template</a> turns a forecast into a public site like the <a href="class-model.html">class model's</a>. Sites included with a submission are listed in the <a href="gallery.html">gallery</a> under the entrant's nickname.</p>
@@ -55,7 +60,7 @@
       <li>Open to Yale students. One entry per person; entries must be the entrant's own work.</li>
       <li>Forecasts cover all 470 races.</li>
       <li>The course data is for use in this competition only and may not be shared.</li>
-      <li>The last file submitted before the deadline counts.</li>
+      <li>The last forecast emailed before the deadline counts.</li>
       <li>Prizes go to the most accurate forecasts once the results are in.</li>
       <li>Entries are listed by nickname. Email addresses are used only for contact and are not posted.</li>
     </ul>
