@@ -23,6 +23,10 @@
   .charts g.row:hover .hit { fill: var(--grid); }
   th.sort { cursor: pointer; user-select: none; }
   tr.clsrow td { background: var(--empty); }
+  #table td .muted { color: var(--ink-3); font-size: 0.9em; }
+  #table th { white-space: normal; vertical-align: bottom; line-height: 1.25; }
+  #table th.r { max-width: 8.5em; }
+  #table td { white-space: nowrap; }
   .key { display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; }
   .dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--likely-d); display: inline-block; }
   @media (max-width: 760px) { .summary, .charts { grid-template-columns: 1fr; } }
@@ -55,7 +59,7 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Table</h2>
-      <p class="note">Click a column to sort. Projected seats count the party favored in each race; the median, range and chances come from each forecaster's simulations.</p>
+      <p class="note">Sorted by the chance Democrats win both chambers; click a column to sort by it. Projected seats count the party favored in each race, and the median and chances come from each forecaster's simulations (or default uncertainty, where a forecaster has none). Accuracy uses the competition's measure, the average absolute error in the Democratic vote share across the 452 scored races, lowest first, and fills in once the results are in. The two class models are shown for reference and are not ranked.</p>
     </div>
     <div class="table-wrap"><table id="table"></table></div>
   </section>

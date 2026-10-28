@@ -17,16 +17,19 @@
   }
   function marginText(m) { if (Math.abs(m) < 0.05) return "Even"; return (m > 0 ? "D +" : "R +") + Math.abs(m).toFixed(1); }
 
-  var races, notup, entries = [], cls = null, ref = null, frozen = null; // cls: the class model; ref: class model + polls
+  var races, notup, results = null, entries = [], cls = null, ref = null, frozen = null; // cls: the class model; ref: class model + polls
 
   function getJSON(path) {
     return fetch(path + "?v=" + Date.now(), { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
   }
 
+  // data/results_2026.csv (race_id, dem_share: the actual D-side share of the two-party vote, as a proportion,
+  // final round in Maine and Alaska) is added once results are in; until then the accuracy column is blank.
   Promise.all([getCSV("data/races_2026.csv"), getCSV("data/senate_seats_not_up_2026.csv"), getCSV("gallery.csv"),
-               getJSON("freeze.json").catch(function () { return null; })])
+               getJSON("freeze.json").catch(function () { return null; }),
+               getCSV("data/results_2026.csv").catch(function () { return null; })])
     .then(function (res) {
-      races = res[0]; notup = res[1]; frozen = res[3];
+      races = res[0]; notup = res[1]; frozen = res[3]; results = res[4];
       if (frozen) {
         $("frozen").innerHTML = "<strong>Frozen at the deadline.</strong> Forecasts as each site showed them at 11:59 pm Eastern on Sunday, November 1.";
         $("frozen").hidden = false;
@@ -71,6 +74,8 @@
               e.sD = A.demNotUp + A.races.filter(function (r) { return r.office === "senate" && r.share > 0.5; }).length;
               e.H = FC.chamber(A.S.h, HOUSE_MAJ); e.Sn = FC.chamber(A.S.s, SENATE_MAJ);
               e.flag = A.problems.length > 0;
+              e.both = both(A.S.h, A.S.s);
+              e.err = accuracy(A.races);
             }
           }
           if (e.isRef) ref = e; else if (e.isClass) cls = e; else entries.push(e);
@@ -81,7 +86,34 @@
   }
 
   // ---------------------------------------------------------------- render
-  var sortKey = "hp", sortDir = -1;
+  // chance Democrats win both chambers: the share of simulations with a House majority AND Senate control
+  function both(h, s) {
+    if (!h || !s || h.length !== s.length) return null;
+    var n = 0; for (var i = 0; i < h.length; i++) if (h[i] >= HOUSE_MAJ && s[i] >= SENATE_MAJ) n++;
+    return n / h.length;
+  }
+  // the competition's measure: average absolute error, in points, over the scored races with a result
+  function accuracy(rs) {
+    if (!results) return null;
+    var act = {}; results.forEach(function (r) { var v = FC.num(r.dem_share); if (v != null && !isNaN(v)) act[r.race_id] = v; });
+    var sum = 0, n = 0;
+    rs.forEach(function (r) {
+      if (r.scored !== "1" || !(r.race_id in act) || r.share == null) return;
+      sum += Math.abs(r.share - act[r.race_id]) * 100; n++;
+    });
+    return n ? { mae: sum / n, n: n } : null;
+  }
+  // rank the listed forecasters (not the two reference rows) by error, lowest first; ties share a rank
+  function rankAll(ok) {
+    var s = ok.filter(function (e) { return e.err; }).sort(function (a, b) { return a.err.mae - b.err.mae; });
+    s.forEach(function (e, i) { e.rank = i && Math.abs(e.err.mae - s[i - 1].err.mae) < 1e-9 ? s[i - 1].rank : i + 1; });
+  }
+  function accText(e) {
+    if (!e.err) return "<span class='muted'>after results</span>";
+    return (e.isClass ? "reference" : e.rank) + " <span class='muted'>(" + e.err.mae.toFixed(2) + " pts)</span>";
+  }
+
+  var sortKey = "both", sortDir = -1;
   function render() {
     var ok = entries.filter(function (e) { return !e.error; });
     summary(ok);
@@ -163,15 +195,15 @@
   window.addEventListener("scroll", function () { $("tip").hidden = true; }, { passive: true });
 
   function table(rows) {
+    rankAll(entries.filter(function (e) { return !e.error; }));
     var cols = [
       ["name", "Forecaster", function (e) { return e.name.toLowerCase(); }],
-      ["hs", "House: projected D seats", function (e) { return e.hD; }],
-      ["hm", "House: median (80% range)", function (e) { return e.H.med; }],
+      ["hs", "House seats: projected (median)", function (e) { return e.hD; }],
       ["hp", "House: D majority", function (e) { return e.H.pmaj; }],
-      ["ss", "Senate: projected D seats", function (e) { return e.sD; }],
-      ["sm", "Senate: median (80% range)", function (e) { return e.Sn.med; }],
+      ["ss", "Senate seats: projected (median)", function (e) { return e.sD; }],
       ["sp", "Senate: D control", function (e) { return e.Sn.pmaj; }],
-      ["un", "Uncertainty", function (e) { return e.own ? 1 : 0; }],
+      ["both", "Both chambers: D", function (e) { return e.both == null ? -1 : e.both; }],
+      ["rk", "Accuracy rank (avg. error)", function (e) { return e.rank || 1e9; }],
       ["as", "As of", function (e) { return e.asof || ""; }]
     ];
     var f = cols.filter(function (c) { return c[0] === sortKey; })[0][2];
@@ -183,14 +215,15 @@
     var tb = body.map(function (e) {
       return "<tr" + (e.isClass ? " class='clsrow'" : "") + "><td>" + (e.isClass ? "<a href='" + esc(e.url) + "'><strong>" + esc(e.name) + "</strong></a>" : "<a href='" + esc(e.url) + "'>" + esc(e.name) + "</a>") +
         (e.flag ? " <span class='badge' title='The site shows a warning about this forecast file'>check file</span>" : "") + "</td>" +
-        "<td class='r num'>" + e.hD + "</td><td class='r num'>" + Math.round(e.H.med) + " (" + Math.round(e.H.lo) + "–" + Math.round(e.H.hi) + ")</td><td class='r num'>" + pct(e.H.pmaj) + "</td>" +
-        "<td class='r num'>" + e.sD + "</td><td class='r num'>" + Math.round(e.Sn.med) + " (" + Math.round(e.Sn.lo) + "–" + Math.round(e.Sn.hi) + ")</td><td class='r num'>" + pct(e.Sn.pmaj) + "</td>" +
-        "<td class='r'>" + (e.own ? "simulated" : "default") + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
+        "<td class='r num'>" + e.hD + " (" + Math.round(e.H.med) + ")</td><td class='r num'>" + pct(e.H.pmaj) + "</td>" +
+        "<td class='r num'>" + e.sD + " (" + Math.round(e.Sn.med) + ")</td><td class='r num'>" + pct(e.Sn.pmaj) + "</td>" +
+        "<td class='r num'>" + (e.both == null ? "" : pct(e.both)) + "</td>" +
+        "<td class='r num'>" + accText(e) + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
     }).join("");
     $("table").innerHTML = head + "<tbody>" + tb + "</tbody>";
     $("table").querySelectorAll("th.sort").forEach(function (th) {
       th.addEventListener("click", function () {
-        var k = th.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = k === "name" ? 1 : -1; }
+        var k = th.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "rk") ? 1 : -1; }
         table(rows);
       });
     });
