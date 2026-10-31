@@ -1,7 +1,25 @@
-forecaster,type,house_seats,senate_seats,house_favored,senate_favored,p_house,p_senate,national_d,captured,url,private,notes
-Silver Bulletin,polling,240,53,239,54,0.957,0.779,53.88,2026-10-31,https://www.natesilver.net/p/nate-silver-2026-midterm-election-polls-model,n,Deluxe (default) version; average seats.
-FiftyPlusOne,polling,241,52,240,54,0.99,0.76,,2026-10-31,https://fiftyplusone.news/forecast/house,n,Median seats.
-Split Ticket,polling,237,53,236,52,0.906,0.730,,2026-10-31,https://www.theargumentmag.com/p/split-ticket-2026-midterms-model,n,Median seats.
-Markets (Polymarket + Kalshi),market,,,,,0.942,0.715,,2026-10-31,,n,Average of Polymarket and Kalshi.
-ElectIt (Harvard),academic,241,53,,,0.94,0.75,54.1,2026-10-31,https://gking.harvard.edu/electit,n,"Model + All Polls forecast, polls through Oct 31."
-Fair model (to seats),academic,213,49,,,,,50.63,2026-10-29,https://fairmodel.econ.yale.edu/vote2020/indeane1.htm,n,"Fair's national House vote (50.63% D), converted to seats with the class model."
+forecaster,type,group,in_average,house_seats,senate_seats,house_favored,senate_favored,p_house,p_senate,national_d,captured,url,private,notes,source,house_interval,senate_interval
+Silver Bulletin,polling,professional,y,240,53,239,54,0.957,0.779,53.88,2026-10-31,https://www.natesilver.net/p/nate-silver-2026-midterm-election-polls-model,n,Deluxe (default) version; average seats.,captured Oct 31,,
+FiftyPlusOne,polling,professional,y,241,52,240,54,0.99,0.76,,2026-10-31,https://fiftyplusone.news/forecast/house,n,Median seats.,captured Oct 31,,
+Split Ticket,polling,professional,y,237,53,236,52,0.906,0.730,,2026-10-31,https://www.theargumentmag.com/p/split-ticket-2026-midterms-model,n,Median seats.,captured Oct 31,,
+Markets (Polymarket + Kalshi),market,market,n,,,,,0.942,0.715,,2026-10-31,,n,Average of Polymarket and Kalshi.,captured Oct 31,,
+ElectIt (Harvard),academic,academic,y,241,53,,,0.94,0.75,54.1,2026-10-31,https://gking.harvard.edu/electit,n,"Model + All Polls forecast, polls through Oct 31.",captured Oct 31,,
+Fair model (to seats),academic,academic,n,213,49,,,,,50.63,2026-10-29,https://fairmodel.econ.yale.edu/vote2020/indeane1.htm,n,"Fair's national House vote (50.63% D), converted to seats with the class model.",captured Oct 29,,
+"Algara, Hale, Bae & Headington",academic,academic,y,238.6,48.6,,,0.9,0.45,,,,n,Structural model. House interval 213.9–275.0 (95%). Senate interval 38.5–58.2 (95%).,John Sides compilation,213.9–275.0 (95%),38.5–58.2 (95%)
+Carson & Whitford,academic,academic,y,230.4,50.6,,,0.801,0.41,,,,n,Nationalization-weighted. House interval 201–260 (95%). Senate interval 43–62 (95%).,John Sides compilation,201–260 (95%),43–62 (95%)
+DeSart,academic,academic,y,241,,,,0.9996,,,,,n,District dissimilarity model; House only. House interval 227–253 (95%).,John Sides compilation,227–253 (95%),
+"Enns, Farah, Gareau-Paquette & Miner",academic,academic,y,235,,,,0.9,,,,,n,District-level model; House only. House interval 209–279 (95%).,John Sides compilation,209–279 (95%),
+Quinlan & Lewis-Beck,academic,academic,y,231,52,,,0.783,,,,,n,Political history model.,John Sides compilation,,
+"Quinn, Brush & Smith",academic,academic,y,257.7,55.9,,,,,,,,n,"Political economy, personal income. House interval 221.4–293.9 (95%). Senate interval 49.3–62.6 (95%).",John Sides compilation,221.4–293.9 (95%),49.3–62.6 (95%)
+Tien & Lewis-Beck,academic,academic,y,248,55,,,,,,,,n,Structural political economy model.,John Sides compilation,,
+Whiteley,academic,academic,y,237,49,,,,,,,,n,Full 1866–2024 model. House interval 220.8–253.2 (95%). Senate interval 46.2–51.8 (95%).,John Sides compilation,220.8–253.2 (95%),46.2–51.8 (95%)
+Rametta,academic,academic,y,,51.6,,,,0.635,,,,n,Senate only. Senate interval 46–57 (90%).,John Sides compilation,,46–57 (90%)
+The Economist,polling,professional,y,236,51,,,0.95,0.53,,,,n,,John Sides compilation,,
+Race to the WH,polling,professional,y,236.2,52.8,,,0.944,0.757,,,,n,"Senate interval ~46–59 (95%, derived).",John Sides compilation,,"~46–59 (95%, derived)"
+Decision Desk HQ / The Hill,polling,professional,y,238.3,51.6,,,0.8,0.6,,,,n,"House interval 189–298 (95%, derived). Senate interval 43–60 (95%, derived).",John Sides compilation,"189–298 (95%, derived)","43–60 (95%, derived)"
+Call the Map,polling,professional,y,235.3,51.2,,,0.84,0.57,,,,n,House interval 213–259 (80%). Senate interval 47–56 (80%).,John Sides compilation,213–259 (80%),47–56 (80%)
+535,polling,professional,y,241.7,51.8,,,0.966,0.692,,,,n,"House interval ~216–274 (95%, derived). Senate interval ~46–56 (95%, derived).",John Sides compilation,"~216–274 (95%, derived)","~46–56 (95%, derived)"
+HDR Analytics,polling,professional,y,,52.2,,,,0.76,,,,n,Senate only. Senate interval 49–55 (80%).,John Sides compilation,,49–55 (80%)
+VoteHub,polling,professional,y,237.7,51.4,,,0.869,0.604,,,,n,Legacy version (polls + fundamentals).,John Sides compilation,,
+Poliwave,polling,professional,y,229,51,,,0.867,0.587,,,,n,House interval 216–246 (80%). Senate interval 48–54 (80%).,John Sides compilation,216–246 (80%),48–54 (80%)
+On Point Politics,polling,professional,y,246.2,53.4,,,0.94,0.81,,,,n,House interval 221–275 (80%). Senate interval 49–58 (80%).,John Sides compilation,221–275 (80%),49–58 (80%)

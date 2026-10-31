@@ -7,14 +7,18 @@
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="assets/style.css">
 <style>
-  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
-  .summary .card { padding: 16px; }
-  .summary .card .hero { font-size: clamp(28px, 3.4vw, 38px); }
+  .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 32px; }
+  .summary .card { padding: 14px; }
+  .summary > * { min-width: 0; }
+  .summary .card .hero { font-size: clamp(24px, 2.6vw, 32px); }
   .summary .card .sub { font-size: 14px; }
   .summary .card .lab { font-size: 13px; }
   .summary .card .cap { margin: 4px 0 0; color: var(--ink-3); font-size: 12px; }
-  @media (max-width: 960px) { .summary { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 520px) { .summary { grid-template-columns: 1fr; } }
+  @media (max-width: 1000px) { .summary { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) { .summary { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 440px) { .summary { grid-template-columns: 1fr; } }
+  .viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 12px; }
+  .viewbar .note { margin: 0; }
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .charts h3 { margin: 0 0 6px; font-size: 16px; }
@@ -70,6 +74,10 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Comparisons</h2>
+      <div class="viewbar">
+        <div class="seg" id="fcview" role="group" aria-label="Which forecasts to compare"><button type="button" data-v="contest" class="on">Contest</button><button type="button" data-v="published">All published forecasts</button></div>
+        <p class="note">Contest: entries next to the class model, academic and professional averages, and markets. All published: every published forecast on its own. Applies to the charts and the table.</p>
+      </div>
       <p class="note">Median seats and 80% range, most to least Democratic. <strong><em>Bold italic</em></strong>: not a contest entry. Blue: Democratic majority. Red: Republican majority.<br>
         <span class="key"><i class="dot" style="background:var(--likely-d)"></i>own simulations</span><span class="key"><i class="dot"></i>default uncertainty</span><span class="key"><i class="sq"></i>published forecast</span></p>
     </div>
@@ -79,7 +87,7 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Table</h2>
-      <p class="note">Most to least Democratic by House seats; by accuracy once results are in. Seats: races favored (median). Accuracy: average error in the Democratic vote share. <strong><em>Bold italic</em></strong> rows are not contest entries and are not ranked. The contest average (shown once there are two entries) pools the entries' simulations. Click a column to sort.</p>
+      <p class="note">Most to least Democratic by House seats; by accuracy once results are in. Seats: races favored (median). Accuracy: average error in the Democratic vote share. <strong><em>Bold italic</em></strong> rows are not contest entries and are not ranked. The contest average (shown once there are two entries) pools the entries' simulations; academic and professional averages are plain averages. Click a column to sort.</p>
     </div>
     <div class="table-wrap"><table id="table"></table></div>
     <ol class="fnotes" id="fc-notes"></ol>

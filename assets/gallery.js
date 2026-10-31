@@ -109,12 +109,16 @@
   }
 
   var sortKey = null, sortDir = -1; // default: by accuracy once results are in, else House seats (most Democratic first)
+  var view = "contest";
   function render() {
     var ok = entries.filter(function (e) { return !e.error; });
     var avgRow = contestAverage(ok);
     summary(ok, avgRow);
     $("chart-house").innerHTML = ""; $("chart-senate").innerHTML = "";
-    var rows = refRows().concat(proRows(), avgRow ? [avgRow] : [], ok);
+    // two views: "contest" (entries next to summary benchmarks) and "published" (every published forecast on its own)
+    var P = proRows(), mk = P.filter(function (e) { return e.group === "market"; });
+    var rows = view === "published" ? refRows().concat(P)
+      : (cls && !cls.error ? [cls] : []).concat(avgRow ? [avgRow] : [], groupAverages(), mk, ok);
     if (rows.length) {
       $("chart-house").appendChild(strip(rows, "H", HOUSE_MAJ, "Democratic House seats"));
       $("chart-senate").appendChild(strip(rows, "Sn", SENATE_MAJ, "Democratic Senate seats"));
@@ -143,14 +147,12 @@
       seats("median", quant(ok.map(function (e) { return e.H.med; }), 0.5)), seats("median", quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
       (ok.length === 1 ? esc(ok[0].name) + ", the only contest forecast listed so far." : "Average of " + ok.length + " contest forecasts.") + " Median seats.");
     else html += "<div class='placeholder'><strong>Contest forecasts appear here</strong> as they are added.</div>";
-    var P = proRows(), pa = P.filter(function (e) { return e.type !== "market" && !/^fair/i.test(e.name); }), mk = P.filter(function (e) { return e.type === "market"; })[0];
-    if (pa.length) {
-      var hp = pa.filter(function (e) { return e.H.pmaj != null; }), sp = pa.filter(function (e) { return e.Sn.pmaj != null; });
-      var hs = pa.filter(function (e) { return !e.H.none; }), ss = pa.filter(function (e) { return !e.Sn.none; });
-      html += cardHTML("Pros and academics", mean(hp, function (e) { return e.H.pmaj; }), mean(sp, function (e) { return e.Sn.pmaj; }),
-        seats("avg.", mean(hs, function (e) { return e.H.med; })), seats("avg.", mean(ss, function (e) { return e.Sn.med; })),
-        "Average of " + pa.map(function (e) { return esc(e.name.replace(/\s*\(.*\)$/, "")); }).join(", ").replace(/, ([^,]*)$/, " and $1") + ". Average seats.");
-    }
+    var G = groupAverages(), mk = proRows().filter(function (e) { return e.group === "market"; })[0];
+    G.forEach(function (g) {
+      html += cardHTML(g.group === "academic" ? "Academics" : "Professionals", g.H.pmaj, g.Sn.pmaj,
+        g.H.none ? "" : seats("avg.", g.H.med), g.Sn.none ? "" : seats("avg.", g.Sn.med),
+        "Average of " + g.members.length + (g.group === "academic" ? " academic models (Fair left out)" : " professional forecasts") + ". Average seats.");
+    });
     if (mk) html += cardHTML("Markets", mk.H.pmaj, mk.Sn.pmaj, mk.H.none ? "" : seats("median", mk.H.med) + (mk.H.estSeats ? "&dagger;" : ""),
       mk.Sn.none ? "" : seats("median", mk.Sn.med) + (mk.Sn.estSeats ? "&dagger;" : ""), "Average of Polymarket and Kalshi. &dagger; Median seats, simulated from Polymarket race prices.");
     $("summary").innerHTML = html;
@@ -227,6 +229,7 @@
     var head = "<thead><tr>" + cols.map(function (c, i) {
       return "<th class='" + (i ? "r " : "") + "sort' data-k='" + c[0] + "' aria-sort='" + (c[0] === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none") + "'>" +
         c[1] + (c[0] === sortKey ? (sortDir > 0 ? " ▲" : " ▼") : "") + "</th>"; }).join("") + "</tr></thead>";
+    var fnList = numberFootnotes(all);
     var tb = all.map(function (e) { return e.isPro ? proRow(e) : entryRow(e); }).join("");
     function entryRow(e) {
       return "<tr" + (e.isClass || e.isAvg ? " class='refrow'" : "") + "><td>" + (e.isClass ? "<a href='" + esc(e.url) + "'><strong><em>" + esc(e.name) + "</em></strong></a>" :
@@ -238,7 +241,7 @@
         "<td class='r num'>" + accText(e) + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
     }
     $("table").innerHTML = head + "<tbody>" + tb + "</tbody>";
-    proFootnotes();
+    proFootnotes(fnList, all);
     $("table").querySelectorAll("th.sort").forEach(function (th) {
       th.addEventListener("click", function () {
         var k = th.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "rk") ? 1 : -1; }
@@ -293,17 +296,46 @@
   function proRow(e) {
     var na = "<span class='muted'>n/a</span>", dag = "<sup class='fn'>&dagger;</sup>";
     var seats = function (c, n) { return c.none ? na : (n != null ? n + " " : "") + "(" + Math.round(c.med) + ")" + (c.estSeats ? dag : ""); };
-    var chance = function (c) { return c.pmaj == null ? na : pct(c.pmaj) + (c.estP ? dag : ""); };
+    var chance = function (c) { return c.pmaj == null ? na : (c.pmaj > 0.995 && c.pmaj < 1 ? "&gt;99%" : pct(c.pmaj)) + (c.estP ? dag : ""); };
     var acc = !e.scorable ? na : e.err ? "reference <span class='muted'>(" + e.err.mae.toFixed(2) + " pts)</span>" : "<span class='muted'>after results</span>";
-    return "<tr class='refrow'><td><strong><em>" + nameLink(e) + "</em></strong>" + (e.fn ? "<sup class='fn'><a href='#fn" + e.fn + "'>" + e.fn + "</a></sup>" : "") + "</td>" +
+    return "<tr class='refrow'><td><strong><em>" + nameLink(e) + "</em></strong>" + (fnNum[e.name] ? "<sup class='fn'><a href='#fn" + fnNum[e.name] + "'>" + fnNum[e.name] + "</a></sup>" : "") + "</td>" +
       "<td class='r num'>" + seats(e.H, e.hD) + "</td><td class='r num'>" + chance(e.H) + "</td>" +
       "<td class='r num'>" + seats(e.Sn, e.sD) + "</td><td class='r num'>" + chance(e.Sn) + "</td>" +
       "<td class='r num'>" + na + "</td><td class='r num'>" + acc + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
   }
-  function proFootnotes() {
+  // footnotes, numbered in the order the rows appear in the table
+  var fnNum = {};
+  function numberFootnotes(shown) {
+    fnNum = {}; var list = [];
+    shown.forEach(function (e) { if (e.isPro && e.note && !fnNum[e.name]) { list.push(e.note); fnNum[e.name] = list.length; } });
+    return list;
+  }
+  function proFootnotes(list, shown) {
     var box = $("fc-notes"); if (!box) return;
-    box.innerHTML = proNotes.map(function (n, i) { return "<li id='fn" + (i + 1) + "'>" + esc(n) + "</li>"; }).join("") +
-      (proRows().length ? "<li class='plain'>&dagger; Simulated here from the source's race forecasts.</li>" : "");
+    var sides = shown.some(function (e) { return e.asof === "via J. Sides" || e.isGroupAvg; });
+    var dag = shown.some(function (e) { return e.isPro && (e.H.estSeats || e.Sn.estSeats || e.H.estP || e.Sn.estP); });
+    box.innerHTML = list.map(function (n, i) { return "<li id='fn" + (i + 1) + "'>" + esc(n) + "</li>"; }).join("") +
+      (dag ? "<li class='plain'>&dagger; Simulated here from the source's race forecasts.</li>" : "") +
+      (sides ? "<li class='plain'>Academic and professional forecasts compiled by John Sides (Oct 2026), except Silver Bulletin, FiftyPlusOne, Split Ticket and ElectIt, captured by us on Oct 31.</li>" : "");
+  }
+
+  // "Academic average" and "Professional average": plain averages across the forecasts in each group that report
+  // each number (Fair and the markets left out). Seats are dots only.
+  function groupAverages() {
+    var P = proRows(), out = [];
+    [["academic", "Academic average"], ["professional", "Professional average"]].forEach(function (g) {
+      var m = P.filter(function (e) { return e.group === g[0] && e.inAvg; });
+      if (!m.length) return;
+      var side = function (k) {
+        var s = m.filter(function (e) { return !e[k].none; }), p = m.filter(function (e) { return e[k].pmaj != null; });
+        if (!s.length) return { none: true, pmaj: p.length ? mean(p, function (e) { return e[k].pmaj; }) : null };
+        var med = mean(s, function (e) { return e[k].med; });
+        return { med: med, lo: med, hi: med, range: false, pmaj: p.length ? mean(p, function (e) { return e[k].pmaj; }) : null, np: p.length, ns: s.length };
+      };
+      out.push({ name: g[1] + " (" + m.length + ")", short: g[1], isPro: true, isGroupAvg: true, group: g[0], members: m,
+                 H: side("H"), Sn: side("Sn"), asof: "" });
+    });
+    return out;
   }
 
   // ---------------------------------------------------------------- published forecasts as gallery rows
@@ -323,8 +355,10 @@
     notup.forEach(function (r) { if (/^D/.test(r.party)) demNotUp = Number(r.seats_not_up); });
     if (cls && !cls.error) cls.A.races.forEach(function (r) { clsBy[r.race_id] = r; });
     (tops || []).filter(function (r) { return r.forecaster && !/^y/i.test(r.private || ""); }).forEach(function (r) {
-      var e = { name: r.forecaster, url: /^https:\/\//.test(r.url || "") ? r.url : "", isPro: true, asof: r.captured, type: r.type };
-      if (r.notes) { notes.push(r.notes); e.fn = notes.length; }
+      var e = { name: r.forecaster, url: /^https:\/\//.test(r.url || "") ? r.url : "", isPro: true, type: r.type,
+                group: r.group || (r.type === "market" ? "market" : "professional"), inAvg: !/^n/i.test(r.in_average || ""),
+                asof: r.captured || (/sides/i.test(r.source || "") ? "via J. Sides" : ""), note: r.notes || "",
+                short: /^Decision Desk/.test(r.forecaster) ? "DDHQ / The Hill" : /, .*&/.test(r.forecaster) ? r.forecaster.split(",")[0] + " et al." : undefined };
       var k = proRaceKey(r.forecaster);
       if (k && bench[k[0]]) simPro(e, k[0], k[1], demNotUp, clsBy);
       // races favored, where the toplines file gives it (sources whose race files stay private)
@@ -334,7 +368,6 @@
       e.Sn = proSide(e, "s", FC.num(r.senate_seats), FC.num(r.p_senate), SENATE_MAJ);
       list.push(e);
     });
-    proNotes = notes;
     return list;
   }
   function simPro(e, key, useP, demNotUp, clsBy) {
@@ -476,6 +509,12 @@
   function okEntries() { return entries.filter(function (e) { return !e.error; }); }
   function benchmarks(ok) { benchRaces(ok); }
 
+  $("fcview").querySelectorAll("button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      $("fcview").querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b === btn); });
+      view = btn.dataset.v; render();
+    });
+  });
   $("bsearch").addEventListener("input", function (e) { bq = e.target.value.trim().toLowerCase(); benchRaces(okEntries()); });
   [["boff", function (v) { boff = v; }], ["bmode", function (v) { bmode = v; }]].forEach(function (g) {
     $(g[0]).querySelectorAll("button").forEach(function (btn) {
