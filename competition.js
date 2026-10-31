@@ -31,7 +31,7 @@ window.COMPETITION = {
     "Forecaster nickname (shown in the gallery and the results):",
     "In PLSC 2219 (yes/no):",
     "Include my forecast in the gallery (yes/no):",
-    "If yes, my forecast site address:",
+    "My forecast site address, if I have one (optional; the gallery links to it):",
     "One sentence about my model (optional):",
     "",
     "Attached:",

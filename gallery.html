@@ -29,6 +29,19 @@
   #table td { white-space: nowrap; }
   .key { display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; }
   .dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--likely-d); display: inline-block; }
+  .subhead { margin: 28px 0 6px; font-size: 17px; }
+  .fnotes { margin: 10px 0 0; padding-left: 22px; color: var(--ink-3); font-size: 13px; }
+  .fnotes li { margin: 2px 0; max-width: 90ch; }
+  sup.fn { font-size: 10px; margin-left: 2px; }
+  sup.fn a { text-decoration: none; }
+  tr.grp td { background: var(--empty); color: var(--ink-2); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 6px; padding-bottom: 6px; }
+  tr.avgrow td { color: var(--ink-2); font-style: italic; }
+  #bench-tops td.src { white-space: normal; min-width: 170px; }
+  #bench-tops td.type { color: var(--ink-3); }
+  #bench-races-wrap { max-height: 640px; overflow: auto; }
+  #bench-races th.sort { white-space: normal; vertical-align: bottom; line-height: 1.25; max-width: 7.5em; }
+  #bench-races td.na { color: var(--ink-3); }
+  #bsearch { flex: 1 1 220px; min-width: 0; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; font-size: 15px; }
   @media (max-width: 760px) { .summary, .charts { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -37,8 +50,8 @@
   <div class="wrap">
     <p class="kicker"><a href="./" style="color:inherit">Yale 2026 Election Prediction Competition</a></p>
     <h1>All Forecasts</h1>
-    <p class="tagline">Forecasts from PLSC 2219 students and Yale competition entrants, listed by nickname, with the class model and the class model + polls.</p>
-    <p class="asof"><span id="count"></span> <span id="live-note">Numbers come from each forecaster's site and update with each upload until the deadline, 11:59 pm Eastern on Sunday, November 1, when the gallery freezes.</span></p>
+    <p class="tagline">Forecasts from PLSC 2219 students and Yale competition entrants, listed by nickname, with the class model, the class model + polls, and published professional and academic forecasts for comparison.</p>
+    <p class="asof"><span id="count"></span> <span id="live-note">Forecasts are added from the files entrants send in, as they arrive. Entries close at 11:59 pm Eastern on Sunday, November 1.</span></p>
   </div>
 </header>
 
@@ -72,12 +85,31 @@
     <div id="split"></div>
   </section>
 
+  <section class="block" id="benchmarks">
+    <div class="block-head">
+      <h2>Professional and Academic Benchmarks</h2>
+      <p class="note">Published forecasts from professional modelers, prediction markets and academic models, captured on the dates shown, with the two class models below them. They are here for comparison: they are not contest entries and are not ranked. This section keeps updating after entries close, through a final capture on Monday, November 2.</p>
+    </div>
+    <div class="table-wrap"><table id="bench-tops"></table></div>
+    <ol class="fnotes" id="bench-notes"></ol>
+
+    <h3 class="subhead">Race by Race</h3>
+    <p class="note">Each race from the published forecasts that release race-level numbers, next to the class model and the average of the contest entries. FiftyPlusOne, Split Ticket, Silver Bulletin and the Fair model appear in the table above only. Polymarket figures are market prices: it has no market for AK-01 or for the California races between two Democrats. No outside source covers the Montana Senate race. Uncontested races are left out. Sorted from closest to least close; click a column to sort by it.</p>
+    <div class="controls">
+      <input id="bsearch" type="search" placeholder="Search a state, district or candidate" aria-label="Search races">
+      <div class="seg" id="boff" role="group" aria-label="Chamber"><button type="button" data-v="all" class="on">All</button><button type="button" data-v="house">House</button><button type="button" data-v="senate">Senate</button></div>
+      <div class="seg" id="bmode" role="group" aria-label="Measure"><button type="button" data-v="p" class="on">Chance D wins</button><button type="button" data-v="m">Margin</button></div>
+    </div>
+    <div class="table-wrap" id="bench-races-wrap"><table id="bench-races"></table></div>
+    <p class="note" id="bench-count"></p>
+  </section>
+
   <p id="errors" class="note" hidden></p>
   <p><a href="./">Competition home</a> &middot; <a href="instructions.html">Instructions</a> &middot; <a href="class-model.html">See the class model's site</a> &middot; <a href="https://kevinmdeluca.com/forecast/class/">Class forecast details</a> &middot; <a href="https://kevinmdeluca.com/forecast/">Forecast tracker</a></p>
 </main>
 
 <footer class="site-foot"><div class="wrap">
-  <p class="fine">Student forecasts, shown as posted, independent of any campaign, party or news organization.</p>
+  <p class="fine">Student forecasts, shown as submitted, independent of any campaign, party or news organization. Published forecasts belong to their sources and are linked in the benchmarks table.</p>
 </div></footer>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>

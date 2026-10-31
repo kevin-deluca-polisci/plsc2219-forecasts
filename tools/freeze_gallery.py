@@ -93,6 +93,11 @@ def main():
         url, name = norm(r["url"]), r.get("forecaster_name", "").strip()
         entry = {"forecaster_name": name}
         out["entries"][url] = entry
+        if (r.get("data_url") or "").strip():
+            # the gallery reads a copy kept in this repo (e.g. an entry sent by email); it can't change, so skip it
+            entry["status"] = "reads a copy in this repo; nothing to freeze"
+            print(f"{name}: {entry['status']}")
+            continue
         rep = repo_of(url)
         if not rep:
             entry["status"] = "not a github.io address; not frozen"
