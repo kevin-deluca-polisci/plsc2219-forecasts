@@ -1,9 +1,11 @@
 /* Class gallery: compares the forecasts entrants sent in, from copies kept in this repo. It never reads their sites.
-   gallery.csv columns: forecaster_name, url, data_url, outlier.
+   gallery.csv columns: forecaster_name, url, data_url, outlier, asof.
      forecaster_name  the gallery nickname
      url              optional: the entrant's own site, linked from their name (must start with https://)
      data_url         the folder in this repo with their forecast.csv (and seat_sims.csv, if they sent one),
                       e.g. entries/the-last-neocon/. See entries/README.md.
+     asof             the date the forecast was received (YYYY-MM-DD), shown as "As of" unless the file has its own
+                      asof column. Update it whenever an entrant sends a new version.
      outlier          y for an entry flagged under the competition's outlier rule (K = 4): still listed everywhere,
                       but left out of the "Contest entries (average)" rows in the benchmarks section. */
 (function () {
@@ -42,7 +44,7 @@
       var jobs = [{ name: "Class Fundamentals Model", short: "Class Fundamentals", url: "class-model.html?model=fundamentals", data: "./", isClass: true },
                   { name: "Class Fundamentals + Polls", short: "Class Fund. + Polls", url: "class-model.html", data: "class_polls/", isClass: true, isRef: true }].concat(list.map(function (r) {
         return { name: r.forecaster_name, url: /^https:\/\//.test(r.url || "") ? r.url.trim() : "", data: slash(r.data_url.trim()),
-                 outlier: /^y/i.test((r.outlier || "").trim()) };
+                 outlier: /^y/i.test((r.outlier || "").trim()), asof: (r.asof || "").trim() };
       }));
       return jobs.reduce(function (p, job) { return p.then(function () { return load(job); }); }, Promise.resolve());
     })
@@ -64,7 +66,7 @@
             var A = FC.analyze(races, notup, res[0], res[1]);
             if (!A.S) e.error = "forecast.csv has errors";
             else {
-              e.A = A; e.asof = A.asof; e.own = !A.S.isDefault;
+              e.A = A; e.asof = A.asof || job.asof || ""; e.own = !A.S.isDefault; // file's own asof column, else gallery.csv
               e.hD = A.races.filter(function (r) { return r.office === "house" && r.share > 0.5; }).length;
               e.sD = A.demNotUp + A.races.filter(function (r) { return r.office === "senate" && r.share > 0.5; }).length;
               e.H = FC.chamber(A.S.h, HOUSE_MAJ); e.Sn = FC.chamber(A.S.s, SENATE_MAJ);
@@ -150,8 +152,8 @@
     var G = groupAverages(), mk = proRows().filter(function (e) { return e.group === "market"; })[0];
     G.forEach(function (g) {
       html += cardHTML(g.group === "academic" ? "Academics" : "Professionals", g.H.pmaj, g.Sn.pmaj,
-        g.H.none ? "" : seats("avg.", g.H.med), g.Sn.none ? "" : seats("avg.", g.Sn.med),
-        "Average of " + g.members.length + (g.group === "academic" ? " academic models (Fair left out)" : " professional forecasts") + ". Average seats.");
+        g.H.none ? "" : seats("median", g.H.med), g.Sn.none ? "" : seats("median", g.Sn.med),
+        "Average chance across " + g.members.length + (g.group === "academic" ? " academic models (Fair left out)" : " professional forecasts") + "; median of their seat numbers.");
     });
     if (mk) html += cardHTML("Markets", mk.H.pmaj, mk.Sn.pmaj, mk.H.none ? "" : seats("median", mk.H.med) + (mk.H.estSeats ? "&dagger;" : ""),
       mk.Sn.none ? "" : seats("median", mk.Sn.med) + (mk.Sn.estSeats ? "&dagger;" : ""), "Average of Polymarket and Kalshi. &dagger; Median seats, simulated from Polymarket race prices.");
@@ -319,8 +321,8 @@
       (sides ? "<li class='plain'>Academic and professional forecasts compiled by John Sides (Oct 2026), except Silver Bulletin, FiftyPlusOne, Split Ticket and ElectIt, captured by us on Oct 31.</li>" : "");
   }
 
-  // "Academic average" and "Professional average": plain averages across the forecasts in each group that report
-  // each number (Fair and the markets left out). Seats are dots only.
+  // "Academic average" and "Professional average": the average chance and the median seat number across the forecasts
+  // in each group that report each one (Fair and the markets left out). Seats are dots only.
   function groupAverages() {
     var P = proRows(), out = [];
     [["academic", "Academic average"], ["professional", "Professional average"]].forEach(function (g) {
@@ -329,7 +331,7 @@
       var side = function (k) {
         var s = m.filter(function (e) { return !e[k].none; }), p = m.filter(function (e) { return e[k].pmaj != null; });
         if (!s.length) return { none: true, pmaj: p.length ? mean(p, function (e) { return e[k].pmaj; }) : null };
-        var med = mean(s, function (e) { return e[k].med; });
+        var med = quant(s.map(function (e) { return e[k].med; }), 0.5); // median of the forecasts' seat numbers
         return { med: med, lo: med, hi: med, range: false, pmaj: p.length ? mean(p, function (e) { return e[k].pmaj; }) : null, np: p.length, ns: s.length };
       };
       out.push({ name: g[1] + " (" + m.length + ")", short: g[1], isPro: true, isGroupAvg: true, group: g[0], members: m,
