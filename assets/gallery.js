@@ -173,7 +173,7 @@
     rows = rows.filter(function (e) { return !e[key].none; }).sort(function (a, b) { return (b[key].med - a[key].med) || (rank(b) - rank(a)); }); // most to least Democratic
     var lo = Math.floor(Math.min.apply(null, rows.map(function (e) { return e[key].lo; }).concat([maj])) - 3);
     var hi = Math.ceil(Math.max.apply(null, rows.map(function (e) { return e[key].hi; }).concat([maj])) + 3);
-    var W = 490, L = 142, R = 12, rowH = 26, top = 24, H = top + rows.length * rowH + 26;
+    var W = 490, L = 142, R = 12, rowH = 26, top = 24, bot = top + rows.length * rowH, H = bot + 42;
     var x = function (v) { return L + (v - lo) / (hi - lo) * (W - L - R); };
     var svg = "<svg viewBox='0 0 " + W + " " + H + "' role='img' aria-label='" + label + ": 80% range and median for each forecaster'>";
     var step = (hi - lo) > 60 ? 10 : (hi - lo) > 25 ? 5 : 2;
@@ -181,6 +181,12 @@
       svg += "<line class='grid' x1='" + x(v) + "' x2='" + x(v) + "' y1='" + (top - 4) + "' y2='" + (H - 22) + "'></line><text class='tick' x='" + x(v) + "' y='" + (H - 6) + "' text-anchor='middle'>" + v + "</text>";
     svg += "<line class='maj' x1='" + x(maj - 0.5) + "' x2='" + x(maj - 0.5) + "' y1='" + (top - 14) + "' y2='" + (H - 22) + "'></line>" +
       "<text class='majlab' x='" + (x(maj - 0.5) + 4) + "' y='" + (top - 6) + "'>" + maj + " for a majority</text>";
+    // dotted line: the average of the medians shown in this chart, labeled under the last row
+    if (rows.length) {
+      var av = mean(rows, function (e) { return e[key].med; }), ax = x(av), right = (maj - 0.5 < av && ax + 130 < W) || ax - 130 < L; // label away from the majority line
+      svg += "<line class='avgline' x1='" + ax + "' x2='" + ax + "' y1='" + (top - 4) + "' y2='" + (bot + 4) + "'></line>" +
+        "<text class='avglab' x='" + (ax + (right ? 4 : -4)) + "' y='" + (bot + 14) + "' text-anchor='" + (right ? "start" : "end") + "'>average of these: " + av.toFixed(1) + "</text>";
+    }
     rows.forEach(function (e, i) {
       var y = top + i * rowH + rowH / 2, c = e[key], col = c.med >= maj ? "var(--likely-d)" : "var(--likely-r)";
       svg += "<g class='row' data-i='" + i + "'><rect class='hit' x='0' y='" + (y - rowH / 2) + "' width='" + W + "' height='" + rowH + "'></rect>" +
