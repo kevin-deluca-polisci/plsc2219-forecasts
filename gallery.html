@@ -17,12 +17,12 @@
   .charts .maj { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 3; }
   .charts .majlab { fill: var(--ink); font-size: 11px; }
   .charts .name { fill: var(--ink-2); font-size: 12px; }
-  .charts .name.cls { fill: var(--ink); font-weight: 700; }
+  .charts .name.ref { fill: var(--ink); font-weight: 700; font-style: italic; }
   .charts .rng { stroke-width: 3; stroke-linecap: round; }
   .charts .hit { fill: transparent; cursor: pointer; }
   .charts g.row:hover .hit { fill: var(--grid); }
   th.sort { cursor: pointer; user-select: none; }
-  tr.clsrow td { background: var(--empty); }
+  tr.refrow td { background: var(--empty); }
   #table td .muted { color: var(--ink-3); font-size: 0.9em; }
   #table th { white-space: normal; vertical-align: bottom; line-height: 1.25; }
   #table th.r { max-width: 8.5em; }
@@ -36,7 +36,6 @@
   sup.fn a { text-decoration: none; }
   tr.grp td { background: var(--empty); color: var(--ink-2); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 6px; padding-bottom: 6px; }
   tr.avgrow td { color: var(--ink-2); font-style: italic; }
-  .charts .name.pro { font-style: italic; }
   .sq { width: 10px; height: 10px; background: var(--likely-d); display: inline-block; }
   .fnotes li.plain { list-style: none; margin-left: -22px; }
   #bench-races-wrap { max-height: 640px; overflow: auto; }
@@ -64,7 +63,7 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Comparisons</h2>
-      <p class="note">Median seats and 80% range. Blue: Democratic majority. Red: Republican majority.<br>
+      <p class="note">Median seats and 80% range, most to least Democratic. <strong><em>Bold italic</em></strong>: not a contest entry. Blue: Democratic majority. Red: Republican majority.<br>
         <span class="key"><i class="dot" style="background:var(--likely-d)"></i>own simulations</span><span class="key"><i class="dot"></i>default uncertainty</span><span class="key"><i class="sq"></i>published forecast</span></p>
     </div>
     <div class="charts"><div id="chart-house"></div><div id="chart-senate"></div></div>
@@ -73,7 +72,7 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Table</h2>
-      <p class="note">Seats: races favored (median). Accuracy: average error in the Democratic vote share, after the results. Class models and published forecasts are not ranked. Click a column to sort.</p>
+      <p class="note">Most to least Democratic by House seats; by accuracy once results are in. Seats: races favored (median). Accuracy: average error in the Democratic vote share. <strong><em>Bold italic</em></strong> rows are not contest entries and are not ranked. Click a column to sort.</p>
     </div>
     <div class="table-wrap"><table id="table"></table></div>
     <ol class="fnotes" id="fc-notes"></ol>
@@ -82,7 +81,7 @@
   <section class="block">
     <div class="block-head">
       <h2>Split Races</h2>
-      <p class="note">Races where contest forecasters split most evenly. Margins in points (D minus R).</p>
+      <p class="note">Races where forecasts split most evenly: contest entries, the Class Fundamentals Model and ElectIt. Margins in points (D minus R).</p>
     </div>
     <div id="split"></div>
   </section>
@@ -90,7 +89,7 @@
   <section class="block" id="benchmarks">
     <div class="block-head">
       <h2>Professional and Academic Benchmarks</h2>
-      <p class="note">Race by race, from the published forecasts that release race-level numbers (captured Oct 31). Polymarket has no market for AK-01, CA-22 or CA-27; no outside source covers the Montana Senate race. Uncontested races left out.</p>
+      <p class="note">Race by race, from the published forecasts that release race-level numbers (captured Oct 31). Polymarket has no market for AK-01, CA-22 or CA-27; no outside source covers the Montana Senate race. Uncontested races left out. Most competitive first. 2024 result: the 2024 House margin where the district lines haven't changed (blank if redrawn or uncontested).</p>
     </div>
     <div class="controls">
       <input id="bsearch" type="search" placeholder="Search a state, district or candidate" aria-label="Search races">

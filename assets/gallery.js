@@ -39,8 +39,8 @@
       $("count").textContent = list.length ? list.length + " forecast" + (list.length === 1 ? "" : "s") + " listed." : "No forecasts listed yet.";
       // the class model and the class model + polls first (this repo's own files), then each student, one at a time so
       // the page stays responsive. Both are reference rows: neither enters the forecaster average.
-      var jobs = [{ name: "Class model", url: "class-model.html?model=fundamentals", data: "./", isClass: true },
-                  { name: "Class model + polls", short: "Class + polls", url: "class-model.html", data: "class_polls/", isClass: true, isRef: true }].concat(list.map(function (r) {
+      var jobs = [{ name: "Class Fundamentals Model", short: "Class Fundamentals", url: "class-model.html?model=fundamentals", data: "./", isClass: true },
+                  { name: "Class Fundamentals + Polls", short: "Class Fund. + Polls", url: "class-model.html", data: "class_polls/", isClass: true, isRef: true }].concat(list.map(function (r) {
         return { name: r.forecaster_name, url: /^https:\/\//.test(r.url || "") ? r.url.trim() : "", data: slash(r.data_url.trim()),
                  outlier: /^y/i.test((r.outlier || "").trim()) };
       }));
@@ -108,7 +108,7 @@
     return (e.isClass ? "reference" : e.rank) + " <span class='muted'>(" + e.err.mae.toFixed(2) + " pts)</span>";
   }
 
-  var sortKey = "both", sortDir = -1;
+  var sortKey = null, sortDir = -1; // default: by accuracy once results are in, else House seats (most Democratic first)
   function render() {
     var ok = entries.filter(function (e) { return !e.error; });
     summary(ok);
@@ -133,8 +133,8 @@
   function mean(a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0) / a.length; }
   function summary(ok) {
     var html = "";
-    if (cls && !cls.error) html += cardHTML("Class model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class. Entries are scored against it.");
-    if (ref && !ref.error) html += cardHTML("Class model + polls", ref.H.pmaj, ref.Sn.pmaj, Math.round(ref.H.med), Math.round(ref.Sn.med), "The class model averaged with each race's polls.");
+    if (cls && !cls.error) html += cardHTML("Class Fundamentals Model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class. Entries are scored against it.");
+    if (ref && !ref.error) html += cardHTML("Class Fundamentals + Polls", ref.H.pmaj, ref.Sn.pmaj, Math.round(ref.H.med), Math.round(ref.Sn.med), "The fundamentals model averaged with each race's polls.");
     if (ok.length) html += cardHTML("Forecaster average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
       Math.round(quant(ok.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
       "Average of " + ok.length + " contest forecast" + (ok.length === 1 ? "" : "s") + ".");
@@ -150,10 +150,10 @@
 
   // one row per forecaster: 80% seat range (bar) and median (dot), with the majority line
   function strip(rows, key, maj, label) {
-    rows = rows.filter(function (e) { return !e[key].none; }).sort(function (a, b) { return (rank(b) - rank(a)) || (b[key].med - a[key].med); });
+    rows = rows.filter(function (e) { return !e[key].none; }).sort(function (a, b) { return (b[key].med - a[key].med) || (rank(b) - rank(a)); }); // most to least Democratic
     var lo = Math.floor(Math.min.apply(null, rows.map(function (e) { return e[key].lo; }).concat([maj])) - 3);
     var hi = Math.ceil(Math.max.apply(null, rows.map(function (e) { return e[key].hi; }).concat([maj])) + 3);
-    var W = 470, L = 118, R = 12, rowH = 26, top = 24, H = top + rows.length * rowH + 26;
+    var W = 490, L = 142, R = 12, rowH = 26, top = 24, H = top + rows.length * rowH + 26;
     var x = function (v) { return L + (v - lo) / (hi - lo) * (W - L - R); };
     var svg = "<svg viewBox='0 0 " + W + " " + H + "' role='img' aria-label='" + label + ": 80% range and median for each forecaster'>";
     var step = (hi - lo) > 60 ? 10 : (hi - lo) > 25 ? 5 : 2;
@@ -164,7 +164,7 @@
     rows.forEach(function (e, i) {
       var y = top + i * rowH + rowH / 2, c = e[key], col = c.med >= maj ? "var(--likely-d)" : "var(--likely-r)";
       svg += "<g class='row' data-i='" + i + "'><rect class='hit' x='0' y='" + (y - rowH / 2) + "' width='" + W + "' height='" + rowH + "'></rect>" +
-        "<text class='name" + (e.isClass ? " cls" : e.isPro ? " pro" : "") + "' x='" + (L - 10) + "' y='" + (y + 4) + "' text-anchor='end'>" + esc(shortName(e)) + "</text>" +
+        "<text class='name" + (e.isClass || e.isPro ? " ref" : "") + "' x='" + (L - 10) + "' y='" + (y + 4) + "' text-anchor='end'>" + esc(shortName(e)) + "</text>" +
         (e.isPro && !c.range ? "" : "<line class='rng' x1='" + x(c.lo) + "' x2='" + x(c.hi) + "' y1='" + y + "' y2='" + y + "' stroke='" + col + "'></line>") +
         (e.isPro ? "<rect x='" + (x(c.med) - 5) + "' y='" + (y - 5) + "' width='10' height='10' fill='" + col + "'></rect></g>"
                  : "<circle cx='" + x(c.med) + "' cy='" + y + "' r='5.5' fill='" + (e.own ? col : "var(--card)") + "' stroke='" + col + "' stroke-width='2'></circle></g>");
@@ -189,7 +189,7 @@
     });
     return div;
   }
-  function shortName(e) { var n = e.short || e.name.replace(/\s*\(.*\)$/, ""); return n.length > 16 ? n.slice(0, 15) + "…" : n; }
+  function shortName(e) { var n = e.short || e.name.replace(/\s*\(.*\)$/, ""); return n.length > 20 ? n.slice(0, 19) + "…" : n; }
   document.addEventListener("click", function () { $("tip").hidden = true; });
   window.addEventListener("scroll", function () { $("tip").hidden = true; }, { passive: true });
 
@@ -197,25 +197,23 @@
     rankAll(entries.filter(function (e) { return !e.error; }));
     var cols = [
       ["name", "Forecaster", function (e) { return e.name.toLowerCase(); }],
-      ["hs", "House seats: projected (median)", function (e) { return e.hD; }],
-      ["hp", "House: D majority", function (e) { return e.H.pmaj; }],
-      ["ss", "Senate seats: projected (median)", function (e) { return e.sD; }],
-      ["sp", "Senate: D control", function (e) { return e.Sn.pmaj; }],
+      ["hs", "House seats: projected (median)", function (e) { return e.H.none ? -1 : e.H.med; }],
+      ["hp", "House: D majority", function (e) { return e.H.pmaj == null ? -1 : e.H.pmaj; }],
+      ["ss", "Senate seats: projected (median)", function (e) { return e.Sn.none ? -1 : e.Sn.med; }],
+      ["sp", "Senate: D control", function (e) { return e.Sn.pmaj == null ? -1 : e.Sn.pmaj; }],
       ["both", "Both chambers: D", function (e) { return e.both == null ? -1 : e.both; }],
-      ["rk", "Accuracy rank (avg. error)", function (e) { return e.rank || 1e9; }],
+      ["rk", "Accuracy rank (avg. error)", function (e) { return e.err ? e.err.mae : 1e9; }],
       ["as", "As of", function (e) { return e.asof || ""; }]
     ];
+    if (!sortKey) { var scored = rows.some(function (e) { return e.err; }); sortKey = scored ? "rk" : "hs"; sortDir = scored ? 1 : -1; }
     var f = cols.filter(function (c) { return c[0] === sortKey; })[0][2];
-    var body = rows.filter(function (e) { return !e.isClass && !e.isPro; }).sort(function (a, b) { var x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
-    var grp = function (t) { return "<tr class='grp'><td colspan='" + cols.length + "'>" + t + "</td></tr>"; };
+    var all = rows.slice().sort(function (a, b) { var x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
     var head = "<thead><tr>" + cols.map(function (c, i) {
       return "<th class='" + (i ? "r " : "") + "sort' data-k='" + c[0] + "' aria-sort='" + (c[0] === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none") + "'>" +
         c[1] + (c[0] === sortKey ? (sortDir > 0 ? " ▲" : " ▼") : "") + "</th>"; }).join("") + "</tr></thead>";
-    var tb = grp("Course models") + refRows().map(entryRow).join("") +
-      (proRows().length ? grp("Published forecasts") + proRows().map(proRow).join("") : "") +
-      grp("Contest entries") + (body.length ? body.map(entryRow).join("") : "<tr><td colspan='" + cols.length + "' class='muted'>None listed yet.</td></tr>");
+    var tb = all.map(function (e) { return e.isPro ? proRow(e) : entryRow(e); }).join("");
     function entryRow(e) {
-      return "<tr" + (e.isClass ? " class='clsrow'" : "") + "><td>" + (e.isClass ? "<a href='" + esc(e.url) + "'><strong>" + esc(e.name) + "</strong></a>" : nameLink(e)) +
+      return "<tr" + (e.isClass ? " class='refrow'" : "") + "><td>" + (e.isClass ? "<a href='" + esc(e.url) + "'><strong><em>" + esc(e.name) + "</em></strong></a>" : nameLink(e)) +
         (e.flag ? " <span class='badge' title='The site shows a warning about this forecast file'>check file</span>" : "") + "</td>" +
         "<td class='r num'>" + e.hD + " (" + Math.round(e.H.med) + ")</td><td class='r num'>" + pct(e.H.pmaj) + "</td>" +
         "<td class='r num'>" + e.sD + " (" + Math.round(e.Sn.med) + ")</td><td class='r num'>" + pct(e.Sn.pmaj) + "</td>" +
@@ -246,10 +244,12 @@
   }
   var TYPE = { polling: "Polling model", market: "Prediction markets", academic: "Academic model", ratings: "Ratings" };
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  var tops = null, bench = {}, bq = "", boff = "all", bmode = "p", bsort = { k: "close", d: 1 };
+  var tops = null, res24 = {}, bench = {}, bq = "", boff = "all", bmode = "p", bsort = { k: "close", d: 1 };
 
   function loadBench() {
-    return Promise.all([getCSV("data/benchmarks/outside_toplines.csv").then(function (t) { tops = t; }).catch(function () { tops = null; })]
+    return Promise.all([getCSV("data/benchmarks/outside_toplines.csv").then(function (t) { tops = t; }).catch(function () { tops = null; }),
+                        // 2024 House result (D-side share of the two-party vote) where the district lines are unchanged
+                        getCSV("data/results_2024_house.csv").then(function (t) { t.forEach(function (r) { res24[r.race_id] = FC.num(r.dem_share_2024); }); }).catch(function () {})]
       .concat(benchSources().map(function (b) {
         return getCSV("data/benchmarks/" + b.file).then(function (rows) {
           var m = {};
@@ -278,7 +278,7 @@
     var seats = function (c, n) { return c.none ? na : (n != null ? n + " " : "") + "(" + Math.round(c.med) + ")" + (c.estSeats ? dag : ""); };
     var chance = function (c) { return c.pmaj == null ? na : pct(c.pmaj) + (c.estP ? dag : ""); };
     var acc = !e.scorable ? na : e.err ? "reference <span class='muted'>(" + e.err.mae.toFixed(2) + " pts)</span>" : "<span class='muted'>after results</span>";
-    return "<tr class='prorow'><td>" + nameLink(e) + (e.fn ? "<sup class='fn'><a href='#fn" + e.fn + "'>" + e.fn + "</a></sup>" : "") + "</td>" +
+    return "<tr class='refrow'><td><strong><em>" + nameLink(e) + "</em></strong>" + (e.fn ? "<sup class='fn'><a href='#fn" + e.fn + "'>" + e.fn + "</a></sup>" : "") + "</td>" +
       "<td class='r num'>" + seats(e.H, e.hD) + "</td><td class='r num'>" + chance(e.H) + "</td>" +
       "<td class='r num'>" + seats(e.Sn, e.sD) + "</td><td class='r num'>" + chance(e.Sn) + "</td>" +
       "<td class='r num'>" + na + "</td><td class='r num'>" + acc + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
@@ -373,7 +373,7 @@
     }
     if (cls && !cls.error) { // the class model only; the class model + polls stays in the toplines table
       var cm = {}; cls.A.races.forEach(function (r) { cm[r.race_id] = { p: pOf(r), share: r.share }; });
-      cols.push({ key: "cls", name: "Class model", get: function (id) { return cm[id] || null; } });
+      cols.push({ key: "cls", name: "Class Fundamentals", get: function (id) { return cm[id] || null; } });
     }
     benchSources().forEach(function (b) { if (b.table && bench[b.key]) cols.push({ key: b.key, name: b.name, get: function (id) { return bench[b.key][id] || null; } }); });
 
@@ -394,6 +394,7 @@
     var val = function (o) {
       if (bsort.k === "close") return o.close;
       if (bsort.k === "race") return o.r.race_id;
+      if (bsort.k === "y24") return ok01(res24[o.r.race_id]) ? res24[o.r.race_id] : null;
       var x = o.v[bsort.k]; return x && x[key] != null ? x[key] : null;
     };
     rows.sort(function (a, b) {
@@ -402,7 +403,7 @@
       return (x < y ? -1 : x > y ? 1 : 0) * bsort.d;
     });
     var arrow = function (k) { return bsort.k === k ? (bsort.d > 0 ? " ▲" : " ▼") : ""; };
-    var head = "<thead><tr><th class='sort' data-k='race'>Race" + arrow("race") + "</th><th>D side</th><th>R side</th>" + cols.map(function (c) {
+    var head = "<thead><tr><th class='sort' data-k='race'>Race" + arrow("race") + "</th><th>D side</th><th>R side</th><th class='r sort' data-k='y24'>2024 result" + arrow("y24") + "</th>" + cols.map(function (c) {
       return "<th class='r sort' data-k='" + c.key + "'>" + esc(c.name) + arrow(c.key) + "</th>"; }).join("") + "</tr></thead>";
     var cell = function (x) {
       if (!x || x[key] == null) return "<td class='r na'>&ndash;</td>";
@@ -410,10 +411,12 @@
       var p = x.p; return "<td class='r num'>" + (p > 0 && p < 0.005 ? "&lt;1%" : p < 1 && p > 0.995 ? "&gt;99%" : pct(p)) + "</td>";
     };
     var body = rows.map(function (o) {
+      var y = res24[o.r.race_id];
       return "<tr><td>" + esc(raceName(o.r)) + "</td><td class='cand'>" + esc(o.r.dem_candidate || "") + "</td><td class='cand'>" + esc(o.r.rep_candidate || "") + "</td>" +
+        (ok01(y) ? "<td class='r num'>" + marginText((2 * y - 1) * 100) + "</td>" : "<td class='r na'>&ndash;</td>") +
         cols.map(function (c) { return cell(o.v[c.key]); }).join("") + "</tr>";
     }).join("");
-    $("bench-races").innerHTML = head + "<tbody>" + (body || "<tr><td colspan='" + (3 + cols.length) + "'>No races match.</td></tr>") + "</tbody>";
+    $("bench-races").innerHTML = head + "<tbody>" + (body || "<tr><td colspan='" + (4 + cols.length) + "'>No races match.</td></tr>") + "</tbody>";
     var left = ok.length - avg.length;
     $("bench-count").textContent = "Showing " + rows.length + " of " + total + " races." + (bmode === "m" ? " Margins in points (D minus R)." : "") +
       (left ? " The contest average leaves out " + left + " entr" + (left === 1 ? "y" : "ies") + " flagged as outliers." : "");
@@ -438,25 +441,27 @@
     });
   });
 
-  // races where the students split most evenly
+  // races where the forecasts split most evenly: contest entries plus the academic forecasts (Class Fundamentals, ElectIt)
   function disagreements(ok) {
-    var box = $("split");
-    if (ok.length < 2) { box.innerHTML = "<p class='note'>This table needs at least two listed forecasts.</p>"; return; }
-    var byId = {};
-    ok.forEach(function (e) { e.A.races.forEach(function (r) {
-      if (FC.isFixed(r) || r.share == null) return;
-      var o = byId[r.race_id] || (byId[r.race_id] = { r: r, d: 0, n: 0, m: 0 });
-      o.n++; o.m += (2 * r.share - 1) * 100; if (r.share > 0.5) o.d++;
-    }); });
-    var clsM = {};
-    if (cls && !cls.error) cls.A.races.forEach(function (r) { clsM[r.race_id] = (2 * r.share - 1) * 100; });
-    var list = Object.keys(byId).map(function (k) { return byId[k]; }).filter(function (o) { return o.d > 0 && o.d < o.n; })
+    var box = $("split"), byRace = {}, pool = [];
+    races.forEach(function (r) { byRace[r.race_id] = r; });
+    ok.forEach(function (e) { var m = {}; e.A.races.forEach(function (r) { m[r.race_id] = r.share; }); pool.push(m); });
+    var clsM = {}, eiM = {};
+    if (cls && !cls.error) { cls.A.races.forEach(function (r) { clsM[r.race_id] = r.share; }); pool.push(clsM); }
+    if (bench.electit) { Object.keys(bench.electit).forEach(function (id) { eiM[id] = bench.electit[id].share; }); pool.push(eiM); }
+    if (pool.length < 2) { box.innerHTML = "<p class='note'>This table needs at least two forecasts.</p>"; return; }
+    var list = races.filter(function (r) { return FC.num(r.fixed_prediction) == null; }).map(function (r) {
+      var o = { r: r, d: 0, n: 0, m: 0 };
+      pool.forEach(function (m) { var v = m[r.race_id]; if (!ok01(v)) return; o.n++; o.m += (2 * v - 1) * 100; if (v > 0.5) o.d++; });
+      return o;
+    }).filter(function (o) { return o.n >= 2 && o.d > 0 && o.d < o.n; })
       .sort(function (a, b) { return Math.abs(a.d / a.n - 0.5) - Math.abs(b.d / b.n - 0.5) || Math.abs(a.m / a.n) - Math.abs(b.m / b.n); }).slice(0, 20);
-    if (!list.length) { box.innerHTML = "<p class='note'>Every listed forecaster favors the same party in every race.</p>"; return; }
-    box.innerHTML = "<div class='table-wrap'><table><thead><tr><th>Race</th><th>D side</th><th>R side</th><th class='r'>Forecasters favoring D</th><th class='r'>Average margin</th><th class='r'>Class model</th></tr></thead><tbody>" +
+    if (!list.length) { box.innerHTML = "<p class='note'>Every forecast favors the same party in every race.</p>"; return; }
+    var mg = function (m, id) { return ok01(m[id]) ? marginText((2 * m[id] - 1) * 100) : ""; };
+    box.innerHTML = "<div class='table-wrap'><table><thead><tr><th>Race</th><th>D side</th><th>R side</th><th class='r'>Forecasts favoring D</th><th class='r'>Average margin</th><th class='r'>Class Fundamentals</th><th class='r'>ElectIt</th></tr></thead><tbody>" +
       list.map(function (o) {
         return "<tr><td>" + esc(raceName(o.r)) + "</td><td class='cand'>" + esc(o.r.dem_candidate || "") + "</td><td class='cand'>" + esc(o.r.rep_candidate || "") + "</td>" +
-          "<td class='r num'>" + o.d + " of " + o.n + "</td><td class='r num'>" + marginText(o.m / o.n) + "</td><td class='r num'>" + (o.r.race_id in clsM ? marginText(clsM[o.r.race_id]) : "") + "</td></tr>";
+          "<td class='r num'>" + o.d + " of " + o.n + "</td><td class='r num'>" + marginText(o.m / o.n) + "</td><td class='r num'>" + mg(clsM, o.r.race_id) + "</td><td class='r num'>" + mg(eiM, o.r.race_id) + "</td></tr>";
       }).join("") + "</tbody></table></div>";
   }
 })();
