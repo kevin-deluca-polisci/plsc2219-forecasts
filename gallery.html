@@ -7,7 +7,14 @@
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="assets/style.css">
 <style>
-  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+  .summary .card { padding: 16px; }
+  .summary .card .hero { font-size: clamp(28px, 3.4vw, 38px); }
+  .summary .card .sub { font-size: 14px; }
+  .summary .card .lab { font-size: 13px; }
+  .summary .card .cap { margin: 4px 0 0; color: var(--ink-3); font-size: 12px; }
+  @media (max-width: 960px) { .summary { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .summary { grid-template-columns: 1fr; } }
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .charts h3 { margin: 0 0 6px; font-size: 16px; }
@@ -42,7 +49,7 @@
   #bench-races th.sort { white-space: normal; vertical-align: bottom; line-height: 1.25; max-width: 7.5em; }
   #bench-races td.na { color: var(--ink-3); }
   #bsearch { flex: 1 1 220px; min-width: 0; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; font-size: 15px; }
-  @media (max-width: 760px) { .summary, .charts { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .charts { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>

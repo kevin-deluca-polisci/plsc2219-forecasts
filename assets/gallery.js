@@ -132,24 +132,37 @@
   function refRows() { return [cls, ref].filter(function (e) { return e && !e.error; }); }
   function rank(e) { return e === cls ? 3 : e === ref ? 2 : e.isPro ? 1 : 0; }
   function mean(a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0) / a.length; }
+  // top cards: fundamentals vs. contest vs. professional and academic forecasts vs. markets
   function summary(ok, avgRow) {
-    var html = "";
-    if (cls && !cls.error) html += cardHTML("Class Fundamentals Model", cls.H.pmaj, cls.Sn.pmaj, Math.round(cls.H.med), Math.round(cls.Sn.med), "The model PLSC 2219 built together in class. Entries are scored against it.");
-    if (ref && !ref.error) html += cardHTML("Class Fundamentals + Polls", ref.H.pmaj, ref.Sn.pmaj, Math.round(ref.H.med), Math.round(ref.Sn.med), "The fundamentals model averaged with each race's polls.");
-    if (avgRow) html += cardHTML("Contest average", avgRow.H.pmaj, avgRow.Sn.pmaj, Math.round(avgRow.H.med), Math.round(avgRow.Sn.med),
-      "Average of " + avgRow.n + " contest forecasts" + (avgRow.left ? " (leaving out " + avgRow.left + " flagged as outlier" + (avgRow.left === 1 ? "" : "s") + ")" : "") + ".");
-    else if (ok.length) html += cardHTML("Forecaster average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
-      Math.round(quant(ok.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
-      "Average of " + ok.length + " contest forecast" + (ok.length === 1 ? "" : "s") + ".");
-    else html += "<div class='placeholder'><strong>Listed forecasts appear here</strong> next to the class model, with an average across forecasters.</div>";
+    var html = "", seats = function (word, x) { return Math.round(x) + " seats"; }; // word: "median" or "avg.", said in the card note
+    if (cls && !cls.error) html += cardHTML("Class Fundamentals", cls.H.pmaj, cls.Sn.pmaj, seats("median", cls.H.med), seats("median", cls.Sn.med),
+      "The model PLSC 2219 built together in class. Median seats.");
+    if (avgRow) html += cardHTML("Contest average", avgRow.H.pmaj, avgRow.Sn.pmaj, seats("median", avgRow.H.med), seats("median", avgRow.Sn.med),
+      "Average of " + avgRow.n + " contest forecasts" + (avgRow.left ? " (leaving out " + avgRow.left + " flagged as outlier" + (avgRow.left === 1 ? "" : "s") + ")" : "") + ". Median seats.");
+    else if (ok.length) html += cardHTML(ok.length === 1 ? "Contest forecast" : "Contest average", mean(ok, function (e) { return e.H.pmaj; }), mean(ok, function (e) { return e.Sn.pmaj; }),
+      seats("median", quant(ok.map(function (e) { return e.H.med; }), 0.5)), seats("median", quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
+      (ok.length === 1 ? esc(ok[0].name) + ", the only contest forecast listed so far." : "Average of " + ok.length + " contest forecasts.") + " Median seats.");
+    else html += "<div class='placeholder'><strong>Contest forecasts appear here</strong> as they are added.</div>";
+    var P = proRows(), pa = P.filter(function (e) { return e.type !== "market" && !/^fair/i.test(e.name); }), mk = P.filter(function (e) { return e.type === "market"; })[0];
+    if (pa.length) {
+      var hp = pa.filter(function (e) { return e.H.pmaj != null; }), sp = pa.filter(function (e) { return e.Sn.pmaj != null; });
+      var hs = pa.filter(function (e) { return !e.H.none; }), ss = pa.filter(function (e) { return !e.Sn.none; });
+      html += cardHTML("Pros and academics", mean(hp, function (e) { return e.H.pmaj; }), mean(sp, function (e) { return e.Sn.pmaj; }),
+        seats("avg.", mean(hs, function (e) { return e.H.med; })), seats("avg.", mean(ss, function (e) { return e.Sn.med; })),
+        "Average of " + pa.map(function (e) { return esc(e.name.replace(/\s*\(.*\)$/, "")); }).join(", ").replace(/, ([^,]*)$/, " and $1") + ". Average seats.");
+    }
+    if (mk) html += cardHTML("Markets", mk.H.pmaj, mk.Sn.pmaj, mk.H.none ? "" : seats("median", mk.H.med) + (mk.H.estSeats ? "&dagger;" : ""),
+      mk.Sn.none ? "" : seats("median", mk.Sn.med) + (mk.Sn.estSeats ? "&dagger;" : ""), "Average of Polymarket and Kalshi. &dagger; Median seats, simulated from Polymarket race prices.");
     $("summary").innerHTML = html;
   }
-  function cardHTML(lab, ph, ps, mh, ms, note) {
-    return "<div class='card'><p class='lab'>" + lab + "</p>" +
-      "<div class='pair'><div><p class='hero num'>" + pct(ph) + "</p><p class='sub'>Democratic House majority<br><span class='num'>median " + mh + " seats</span></p></div>" +
-      "<div><p class='hero num'>" + pct(ps) + "</p><p class='sub'>Democratic Senate control<br><span class='num'>median " + ms + " seats</span></p></div></div>" +
+  function cardHTML(lab, ph, ps, hTxt, sTxt, note) {
+    var big = function (x) { return x == null ? "n/a" : pct(x); };
+    return "<div class='card'><p class='lab'>" + lab + "</p><p class='cap'>Chance Democrats win</p>" +
+      "<div class='pair'><div><p class='hero num'>" + big(ph) + "</p><p class='sub'><b>House</b><br><span class='num'>" + hTxt + "</span></p></div>" +
+      "<div><p class='hero num'>" + big(ps) + "</p><p class='sub'><b>Senate</b><br><span class='num'>" + sTxt + "</span></p></div></div>" +
       "<p class='sub' style='font-size:13px'>" + note + "</p></div>";
   }
+
 
   // one row per forecaster: 80% seat range (bar) and median (dot), with the majority line
   function strip(rows, key, maj, label) {
@@ -310,7 +323,7 @@
     notup.forEach(function (r) { if (/^D/.test(r.party)) demNotUp = Number(r.seats_not_up); });
     if (cls && !cls.error) cls.A.races.forEach(function (r) { clsBy[r.race_id] = r; });
     (tops || []).filter(function (r) { return r.forecaster && !/^y/i.test(r.private || ""); }).forEach(function (r) {
-      var e = { name: r.forecaster, url: /^https:\/\//.test(r.url || "") ? r.url : "", isPro: true, asof: r.captured };
+      var e = { name: r.forecaster, url: /^https:\/\//.test(r.url || "") ? r.url : "", isPro: true, asof: r.captured, type: r.type };
       if (r.notes) { notes.push(r.notes); e.fn = notes.length; }
       var k = proRaceKey(r.forecaster);
       if (k && bench[k[0]]) simPro(e, k[0], k[1], demNotUp, clsBy);
