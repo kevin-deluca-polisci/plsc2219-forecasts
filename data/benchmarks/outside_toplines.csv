@@ -1,7 +1,7 @@
-forecaster,type,house_seats,senate_seats,p_house,p_senate,national_d,captured,url,private,notes
-Silver Bulletin,polling,,,,0.777,,2026-10-29,https://www.natesilver.net/p/nate-silver-2026-midterm-election-polls-model,n,Paywalled; Senate odds via Newsweek.
-FiftyPlusOne,polling,241,52,0.99,0.76,,2026-10-31,https://fiftyplusone.news/forecast/house,n,Median seats.
-Split Ticket,polling,237,53,0.906,0.730,,2026-10-31,https://www.theargumentmag.com/p/split-ticket-2026-midterms-model,n,Median seats.
-Markets (Polymarket + Kalshi),market,,,0.942,0.715,,2026-10-31,,n,Average of Polymarket and Kalshi.
-ElectIt (Harvard),academic,241,53,0.94,0.75,54.1,2026-10-31,https://gking.harvard.edu/electit,n,"Model + All Polls forecast, polls through Oct 31."
-Fair model (to seats),academic,213,49,,,50.63,2026-10-29,https://fairmodel.econ.yale.edu/vote2020/indeane1.htm,n,"Fair's national House vote (50.63% D), converted to seats with the class model."
+forecaster,type,house_seats,senate_seats,house_favored,senate_favored,p_house,p_senate,national_d,captured,url,private,notes
+Silver Bulletin,polling,,,,,,0.777,,2026-10-29,https://www.natesilver.net/p/nate-silver-2026-midterm-election-polls-model,n,Paywalled; Senate odds via Newsweek.
+FiftyPlusOne,polling,241,52,240,54,0.99,0.76,,2026-10-31,https://fiftyplusone.news/forecast/house,n,Median seats.
+Split Ticket,polling,237,53,236,52,0.906,0.730,,2026-10-31,https://www.theargumentmag.com/p/split-ticket-2026-midterms-model,n,Median seats.
+Markets (Polymarket + Kalshi),market,,,,,0.942,0.715,,2026-10-31,,n,Average of Polymarket and Kalshi.
+ElectIt (Harvard),academic,241,53,,,0.94,0.75,54.1,2026-10-31,https://gking.harvard.edu/electit,n,"Model + All Polls forecast, polls through Oct 31."
+Fair model (to seats),academic,213,49,,,,,50.63,2026-10-29,https://fairmodel.econ.yale.edu/vote2020/indeane1.htm,n,"Fair's national House vote (50.63% D), converted to seats with the class model."

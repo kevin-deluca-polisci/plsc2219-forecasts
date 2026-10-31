@@ -310,6 +310,9 @@
       if (r.notes) { notes.push(r.notes); e.fn = notes.length; }
       var k = proRaceKey(r.forecaster);
       if (k && bench[k[0]]) simPro(e, k[0], k[1], demNotUp, clsBy);
+      // races favored, where the toplines file gives it (sources whose race files stay private)
+      if (e.hD == null && ok01(FC.num(r.house_favored))) e.hD = FC.num(r.house_favored);
+      if (e.sD == null && ok01(FC.num(r.senate_favored))) e.sD = FC.num(r.senate_favored);
       e.H = proSide(e, "h", FC.num(r.house_seats), FC.num(r.p_house), HOUSE_MAJ);
       e.Sn = proSide(e, "s", FC.num(r.senate_seats), FC.num(r.p_senate), SENATE_MAJ);
       list.push(e);
