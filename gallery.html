@@ -36,8 +36,9 @@
   sup.fn a { text-decoration: none; }
   tr.grp td { background: var(--empty); color: var(--ink-2); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 6px; padding-bottom: 6px; }
   tr.avgrow td { color: var(--ink-2); font-style: italic; }
-  #bench-tops td.src { white-space: normal; min-width: 170px; }
-  #bench-tops td.type { color: var(--ink-3); }
+  .charts .name.pro { font-style: italic; }
+  .sq { width: 10px; height: 10px; background: var(--likely-d); display: inline-block; }
+  .fnotes li.plain { list-style: none; margin-left: -22px; }
   #bench-races-wrap { max-height: 640px; overflow: auto; }
   #bench-races th.sort { white-space: normal; vertical-align: bottom; line-height: 1.25; max-width: 7.5em; }
   #bench-races td.na { color: var(--ink-3); }
@@ -50,8 +51,8 @@
   <div class="wrap">
     <p class="kicker"><a href="./" style="color:inherit">Yale 2026 Election Prediction Competition</a></p>
     <h1>All Forecasts</h1>
-    <p class="tagline">Forecasts from PLSC 2219 students and Yale competition entrants, listed by nickname, with the class model, the class model + polls, and published professional and academic forecasts for comparison.</p>
-    <p class="asof"><span id="count"></span> <span id="live-note">Forecasts are added from the files entrants send in, as they arrive. Entries close at 11:59 pm Eastern on Sunday, November 1.</span></p>
+    <p class="tagline">Contest forecasts by nickname, next to the class models and published forecasts.</p>
+    <p class="asof"><span id="count"></span> <span id="live-note">Entries close at 11:59 pm ET on Sunday, November 1.</span></p>
   </div>
 </header>
 
@@ -63,8 +64,8 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Comparisons</h2>
-      <p class="note">Each row is one forecaster: the dot is the median seat count and the bar is the 80% range. Blue: Democratic majority at the median. Red: Republican majority at the median.
-        <span class="key"><i class="dot" style="background:var(--likely-d)"></i>forecaster's simulations</span><span class="key"><i class="dot"></i>default uncertainty</span></p>
+      <p class="note">Median seats and 80% range. Blue: Democratic majority. Red: Republican majority.<br>
+        <span class="key"><i class="dot" style="background:var(--likely-d)"></i>own simulations</span><span class="key"><i class="dot"></i>default uncertainty</span><span class="key"><i class="sq"></i>published forecast</span></p>
     </div>
     <div class="charts"><div id="chart-house"></div><div id="chart-senate"></div></div>
   </section>
@@ -72,15 +73,16 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Table</h2>
-      <p class="note">Sorted by the chance Democrats win both chambers; click a column to sort by it. Projected seats count the party favored in each race, and the median and chances come from each forecaster's simulations (or default uncertainty, where a forecaster has none). Accuracy uses the competition's measure, the average absolute error in the Democratic vote share across the 452 scored races, lowest first, and fills in once the results are in. The two class models are shown for reference and are not ranked.</p>
+      <p class="note">Seats: races favored (median). Accuracy: average error in the Democratic vote share, after the results. Class models and published forecasts are not ranked. Click a column to sort.</p>
     </div>
     <div class="table-wrap"><table id="table"></table></div>
+    <ol class="fnotes" id="fc-notes"></ol>
   </section>
 
   <section class="block">
     <div class="block-head">
       <h2>Split Races</h2>
-      <p class="note">Races where forecasters split most evenly between the parties. Margins are in points (Democratic share minus Republican share).</p>
+      <p class="note">Races where contest forecasters split most evenly. Margins in points (D minus R).</p>
     </div>
     <div id="split"></div>
   </section>
@@ -88,13 +90,8 @@
   <section class="block" id="benchmarks">
     <div class="block-head">
       <h2>Professional and Academic Benchmarks</h2>
-      <p class="note">Published forecasts from professional modelers, prediction markets and academic models, captured on the dates shown, with the two class models below them. They are here for comparison: they are not contest entries and are not ranked.</p>
+      <p class="note">Race by race, from the published forecasts that release race-level numbers (captured Oct 31). Polymarket has no market for AK-01, CA-22 or CA-27; no outside source covers the Montana Senate race. Uncontested races left out.</p>
     </div>
-    <div class="table-wrap"><table id="bench-tops"></table></div>
-    <ol class="fnotes" id="bench-notes"></ol>
-
-    <h3 class="subhead">Race by Race</h3>
-    <p class="note">Each race from the published forecasts that release race-level numbers, next to the class model and the average of the contest entries. FiftyPlusOne, Split Ticket, Silver Bulletin and the Fair model appear in the table above only. Polymarket figures are market prices: it has no market for AK-01 or for the California races between two Democrats. No outside source covers the Montana Senate race. Uncontested races are left out. Sorted from closest to least close; click a column to sort by it.</p>
     <div class="controls">
       <input id="bsearch" type="search" placeholder="Search a state, district or candidate" aria-label="Search races">
       <div class="seg" id="boff" role="group" aria-label="Chamber"><button type="button" data-v="all" class="on">All</button><button type="button" data-v="house">House</button><button type="button" data-v="senate">Senate</button></div>
@@ -109,7 +106,7 @@
 </main>
 
 <footer class="site-foot"><div class="wrap">
-  <p class="fine">Student forecasts, shown as submitted, independent of any campaign, party or news organization. Published forecasts belong to their sources and are linked in the benchmarks table.</p>
+  <p class="fine">Forecasts shown as submitted, independent of any campaign, party or news organization. Published forecasts belong to their sources.</p>
 </div></footer>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>

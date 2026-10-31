@@ -1,7 +1,7 @@
 forecaster,type,house_seats,senate_seats,p_house,p_senate,national_d,captured,url,private,notes
-Silver Bulletin,polling,,,,0.777,,2026-10-29,https://www.natesilver.net/p/nate-silver-2026-midterm-election-polls-model,n,Paywalled; Senate odds as reported by Newsweek (Oct 29).
-FiftyPlusOne,polling,241,52,0.99,0.76,,2026-10-31,https://fiftyplusone.news/forecast/house,n,Median seats; updated Oct 31 11:10am.
-Split Ticket,polling,237,53,0.906,0.730,,2026-10-31,https://www.theargumentmag.com/p/split-ticket-2026-midterms-model,n,"Median seats, from the model's Datawrapper charts."
-Markets (Polymarket + Kalshi),market,,,0.942,0.715,,2026-10-31,,n,Average of midpoints: House Polymarket 0.945 / Kalshi 0.9385; Senate 0.715 / 0.715.
-ElectIt (Harvard),academic,241,53,0.94,0.75,54.1,2026-10-31,https://gking.harvard.edu/electit,n,"ElectIt's Model + All Polls forecast (the site's headline forecast, updated as polls come in), polls through Oct 31, 1:50am ET. ElectIt also posts a post-nomination forecast without polls, frozen since Oct 15; that one is not shown here. 95% ranges: House 212-283, Senate 47-57."
-Fair model (to seats),academic,213,49,,,50.63,2026-10-29,https://fairmodel.econ.yale.edu/vote2020/indeane1.htm,n,"Fair's national House vote forecast (50.63% D), converted to seats with the class model."
+Silver Bulletin,polling,,,,0.777,,2026-10-29,https://www.natesilver.net/p/nate-silver-2026-midterm-election-polls-model,n,Paywalled; Senate odds via Newsweek.
+FiftyPlusOne,polling,241,52,0.99,0.76,,2026-10-31,https://fiftyplusone.news/forecast/house,n,Median seats.
+Split Ticket,polling,237,53,0.906,0.730,,2026-10-31,https://www.theargumentmag.com/p/split-ticket-2026-midterms-model,n,Median seats.
+Markets (Polymarket + Kalshi),market,,,0.942,0.715,,2026-10-31,,n,Average of Polymarket and Kalshi.
+ElectIt (Harvard),academic,241,53,0.94,0.75,54.1,2026-10-31,https://gking.harvard.edu/electit,n,"Model + All Polls forecast, polls through Oct 31."
+Fair model (to seats),academic,213,49,,,50.63,2026-10-29,https://fairmodel.econ.yale.edu/vote2020/indeane1.htm,n,"Fair's national House vote (50.63% D), converted to seats with the class model."
