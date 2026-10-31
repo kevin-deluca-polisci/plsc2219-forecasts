@@ -1,9 +1,11 @@
 /* Class gallery: compares the forecasts entrants sent in, from copies kept in this repo. It never reads their sites.
-   gallery.csv columns: forecaster_name, url, data_url.
+   gallery.csv columns: forecaster_name, url, data_url, outlier.
      forecaster_name  the gallery nickname
      url              optional: the entrant's own site, linked from their name (must start with https://)
      data_url         the folder in this repo with their forecast.csv (and seat_sims.csv, if they sent one),
-                      e.g. entries/the-last-neocon/. See entries/README.md. */
+                      e.g. entries/the-last-neocon/. See entries/README.md.
+     outlier          y for an entry flagged under the competition's outlier rule (K = 4): still listed everywhere,
+                      but left out of the "Contest entries (average)" rows in the benchmarks section. */
 (function () {
   "use strict";
   var esc = FC.esc, getCSV = FC.getCSV, quant = FC.quant;
@@ -39,7 +41,8 @@
       // the page stays responsive. Both are reference rows: neither enters the forecaster average.
       var jobs = [{ name: "Class model", url: "class-model.html?model=fundamentals", data: "./", isClass: true },
                   { name: "Class model + polls", short: "Class + polls", url: "class-model.html", data: "class_polls/", isClass: true, isRef: true }].concat(list.map(function (r) {
-        return { name: r.forecaster_name, url: /^https:\/\//.test(r.url || "") ? r.url.trim() : "", data: slash(r.data_url.trim()) };
+        return { name: r.forecaster_name, url: /^https:\/\//.test(r.url || "") ? r.url.trim() : "", data: slash(r.data_url.trim()),
+                 outlier: /^y/i.test((r.outlier || "").trim()) };
       }));
       return jobs.reduce(function (p, job) { return p.then(function () { return load(job); }); }, Promise.resolve());
     })
@@ -55,7 +58,7 @@
     ]).then(function (res) {
       return new Promise(function (done) {
         setTimeout(function () { // let the page repaint between forecasters
-          var e = { name: job.name, short: job.short, url: job.url, isClass: !!job.isClass, isRef: !!job.isRef };
+          var e = { name: job.name, short: job.short, url: job.url, isClass: !!job.isClass, isRef: !!job.isRef, outlier: !!job.outlier };
           if (!res[0]) { e.error = "no forecast.csv found yet"; }
           else {
             var A = FC.analyze(races, notup, res[0], res[1]);
@@ -287,21 +290,26 @@
         html += row("", "<a href='" + esc(e.url) + "'>" + esc(e.name) + "</a>", "Class model", Math.round(e.H.med), Math.round(e.Sn.med), pct(e.H.pmaj), pct(e.Sn.pmaj), day(e.asof));
       });
     }
-    if (ok.length) {
-      html += row("avgrow", "Contest entries (average of " + ok.length + ")", "For comparison",
-        Math.round(quant(ok.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(ok.map(function (e) { return e.Sn.med; }), 0.5)),
-        pct(mean(ok, function (e) { return e.H.pmaj; })), pct(mean(ok, function (e) { return e.Sn.pmaj; })), closed ? "Nov 1" : "so far");
+    var avg = avgSet(ok), left = ok.length - avg.length;
+    if (avg.length) {
+      html += row("avgrow", "Contest entries (average of " + avg.length + ")", "For comparison",
+        Math.round(quant(avg.map(function (e) { return e.H.med; }), 0.5)), Math.round(quant(avg.map(function (e) { return e.Sn.med; }), 0.5)),
+        pct(mean(avg, function (e) { return e.H.pmaj; })), pct(mean(avg, function (e) { return e.Sn.pmaj; })), closed ? "Nov 1" : "so far");
     }
     box.innerHTML = html + "</tbody>";
     $("bench-notes").innerHTML = notes.map(function (n, i) { return "<li id='bn" + (i + 1) + "'>" + esc(n) + "</li>"; }).join("") +
-      "<li class='plain' style='list-style:none;margin-left:-22px'>Seats are medians, or the published projection where a source gives one number. Class model seats and chances come from its simulations.</li>";
+      "<li class='plain' style='list-style:none;margin-left:-22px'>Seats are medians, or the published projection where a source gives one number. Class model seats and chances come from its simulations." +
+      (left ? " The contest-entry averages here and below leave out " + left + " listed entr" + (left === 1 ? "y" : "ies") + " flagged under the competition's outlier rule." : "") + "</li>";
   }
 
+  // entries that count toward the "Contest entries (average)" rows: everyone listed except flagged outliers
+  function avgSet(ok) { return ok.filter(function (e) { return !e.outlier; }); }
+
   function benchRaces(ok) {
-    var cols = [];
-    if (ok.length) {
+    var cols = [], avg = avgSet(ok);
+    if (avg.length) {
       var acc = {};
-      ok.forEach(function (e) { e.A.races.forEach(function (r) {
+      avg.forEach(function (e) { e.A.races.forEach(function (r) {
         var a = acc[r.race_id] || (acc[r.race_id] = { p: 0, np: 0, s: 0, ns: 0 }), p = pOf(r);
         if (ok01(p)) { a.p += p; a.np++; }
         if (ok01(r.share)) { a.s += r.share; a.ns++; }
