@@ -228,6 +228,9 @@
     return "<tspan x='" + xx + "' y='" + (y - 1.5) + "' style='font-size:11px'>" + esc(a) + "</tspan>" +
            "<tspan x='" + xx + "' y='" + (y + 9.5) + "' style='font-size:11px'>" + esc(b) + "</tspan>";
   }
+  // "via J. Sides" links to his compilation post
+  var SIDES_URL = "https://goodauthority.org/news/what-64-midterm-election-forecasts-can-tell-us/";
+  function asofCell(e) { return e.asof === "via J. Sides" ? "<a href='" + SIDES_URL + "'>via J. Sides</a>" : esc(e.asof || ""); }
   function shortName(e) { var n = e.short || e.name.replace(/\s*\(.*\)$/, ""); return n.length > 20 ? n.slice(0, 19) + "…" : n; }
   document.addEventListener("click", function () { $("tip").hidden = true; });
   window.addEventListener("scroll", function () { $("tip").hidden = true; }, { passive: true });
@@ -322,7 +325,7 @@
     return "<tr class='refrow'><td><strong><em>" + nameLink(e) + "</em></strong>" + (fnNum[e.name] ? "<sup class='fn'><a href='#fn" + fnNum[e.name] + "'>" + fnNum[e.name] + "</a></sup>" : "") + "</td>" +
       "<td class='r num'>" + seats(e.H, e.hD) + "</td><td class='r num'>" + chance(e.H) + "</td>" +
       "<td class='r num'>" + seats(e.Sn, e.sD) + "</td><td class='r num'>" + chance(e.Sn) + "</td>" +
-      "<td class='r num'>" + na + "</td><td class='r num'>" + acc + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
+      "<td class='r num'>" + na + "</td><td class='r num'>" + acc + "</td><td class='r num'>" + asofCell(e) + "</td></tr>";
   }
   // footnotes, numbered in the order the rows appear in the table
   var fnNum = {};
