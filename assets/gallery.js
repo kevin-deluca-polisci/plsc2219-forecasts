@@ -190,7 +190,7 @@
     rows.forEach(function (e, i) {
       var y = top + i * rowH + rowH / 2, c = e[key], col = c.med >= maj ? "var(--likely-d)" : "var(--likely-r)";
       svg += "<g class='row' data-i='" + i + "'><rect class='hit' x='0' y='" + (y - rowH / 2) + "' width='" + W + "' height='" + rowH + "'></rect>" +
-        "<text class='name" + (e.isClass || e.isPro || e.isAvg ? " ref" : "") + "' x='" + (L - 10) + "' y='" + (y + 4) + "' text-anchor='end'>" + esc(shortName(e)) + "</text>" +
+        "<text class='name" + (e.isClass || e.isPro || e.isAvg ? " ref" : "") + "' x='" + (L - 10) + "' y='" + (y + 4) + "' text-anchor='end'>" + nameLines(e, L - 10, y) + "</text>" +
         (e.isPro && !c.range ? "" : "<line class='rng' x1='" + x(c.lo) + "' x2='" + x(c.hi) + "' y1='" + y + "' y2='" + y + "' stroke='" + col + "'></line>") +
         (e.isPro ? "<rect x='" + (x(c.med) - 5) + "' y='" + (y - 5) + "' width='10' height='10' fill='" + col + "'></rect></g>"
                  : "<circle cx='" + x(c.med) + "' cy='" + y + "' r='5.5' fill='" + (e.own ? col : "var(--card)") + "' stroke='" + col + "' stroke-width='2'></circle></g>");
@@ -214,6 +214,19 @@
       g.addEventListener("mouseleave", function () { tip.hidden = true; });
     });
     return div;
+  }
+  // a name too long for one line is split at the hyphen or space nearest its middle into two
+  // lines, centered on the row; a name with no break point, or a half still too long, is cut
+  function nameLines(e, xx, y) {
+    var n = e.short || e.name.replace(/\s*\(.*\)$/, "");
+    if (n.length <= 20) return esc(n);
+    var best = -1;
+    for (var i = 1; i < n.length - 1; i++) if (/[\s\-_]/.test(n[i]) && (best < 0 || Math.abs(i - n.length / 2) < Math.abs(best - n.length / 2))) best = i;
+    if (best < 0) return esc(shortName(e));
+    var cut = function (s) { return s.length > 20 ? s.slice(0, 19) + "\u2026" : s; };
+    var a = cut(n.slice(0, n[best] === "-" ? best + 1 : best)), b = cut(n.slice(best + 1));
+    return "<tspan x='" + xx + "' y='" + (y - 1.5) + "' style='font-size:11px'>" + esc(a) + "</tspan>" +
+           "<tspan x='" + xx + "' y='" + (y + 9.5) + "' style='font-size:11px'>" + esc(b) + "</tspan>";
   }
   function shortName(e) { var n = e.short || e.name.replace(/\s*\(.*\)$/, ""); return n.length > 20 ? n.slice(0, 19) + "…" : n; }
   document.addEventListener("click", function () { $("tip").hidden = true; });
