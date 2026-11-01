@@ -155,8 +155,8 @@
         g.H.none ? "" : seats("median", g.H.med), g.Sn.none ? "" : seats("median", g.Sn.med),
         "Average chance across " + g.members.length + (g.group === "academic" ? " academic models (Fair left out)" : " professional forecasts") + "; median of their seat numbers.");
     });
-    if (mk) html += cardHTML("Markets", mk.H.pmaj, mk.Sn.pmaj, mk.H.none ? "" : seats("median", mk.H.med) + (mk.H.estSeats ? "&dagger;" : ""),
-      mk.Sn.none ? "" : seats("median", mk.Sn.med) + (mk.Sn.estSeats ? "&dagger;" : ""), "Average of Polymarket and Kalshi. &dagger; Median seats, simulated from Polymarket race prices.");
+    if (mk) html += cardHTML("Markets", mk.H.pmaj, mk.Sn.pmaj, mk.H.none ? "" : seats("median", mk.H.med),
+      mk.Sn.none ? "" : seats("median", mk.Sn.med), "Average of Polymarket and Kalshi. &dagger; Median seats, simulated from Polymarket race prices.");
     $("summary").innerHTML = html;
   }
   function cardHTML(lab, ph, ps, hTxt, sTxt, note) {
@@ -164,7 +164,7 @@
     return "<div class='card'><p class='lab'>" + lab + "</p><p class='cap'>Chance Democrats win</p>" +
       "<div class='pair'><div><p class='hero num'>" + big(ph) + "</p><p class='sub'><b>House</b><br><span class='num'>" + hTxt + "</span></p></div>" +
       "<div><p class='hero num'>" + big(ps) + "</p><p class='sub'><b>Senate</b><br><span class='num'>" + sTxt + "</span></p></div></div>" +
-      "<p class='sub' style='font-size:13px'>" + note + "</p></div>";
+      "</div>"; // no explanation line on the cards (note kept in the calls for reference only)
   }
 
 
