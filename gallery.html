@@ -10,6 +10,23 @@
   .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 32px; }
   .summary .card { padding: 14px; }
   .summary > * { min-width: 0; }
+  .headline { margin-bottom: 14px; padding: 18px 22px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 28px; align-items: center; }
+  .headline[hidden] { display: none; }
+  .hl-svg { display: block; width: 100%; height: auto; }
+  .hl-svg .hl-ch { fill: var(--ink); font-size: 14px; font-weight: 600; }
+  .hl-svg .hl-axis { stroke: var(--grid); stroke-width: 2; }
+  .hl-svg .hl-tick { fill: var(--ink-3); font-size: 12px; }
+  .hl-svg .maj { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 3; }
+  .hl-svg .avgline { stroke: var(--focus); }
+  .hl-svg .avglab { fill: var(--focus); font-size: 12px; font-weight: 600; }
+  .hl-svg .hl-dot { fill-opacity: 0.85; stroke: var(--card); stroke-width: 1.5; }
+  @media (max-width: 800px) { .headline { grid-template-columns: 1fr; } }
+  .headline .lab { margin: 0 0 6px; }
+  .hl-row { display: flex; flex-wrap: wrap; gap: 12px 56px; }
+  .hl-num { margin: 0; font-size: clamp(40px, 6vw, 60px); font-weight: 700; line-height: 1; }
+  .hl-lab { margin: 4px 0 0; font-size: 16px; font-weight: 600; }
+  .hl-sub { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; }
+  .hl-note { margin: 12px 0 0; color: var(--ink-3); font-size: 13px; }
   .summary .card .hero { font-size: clamp(24px, 2.6vw, 32px); }
   .summary .card .sub { font-size: 14px; }
   .summary .card .lab { font-size: 13px; }
@@ -72,6 +89,7 @@
 <main class="wrap">
   <div id="frozen" class="banner banner-info" hidden></div>
   <p id="loading" class="note">Loading&hellip;</p>
+  <section class="card headline" id="headline" aria-label="The contest forecast" hidden></section>
   <section class="summary" id="summary" aria-label="Summary"></section>
 
   <section class="block">

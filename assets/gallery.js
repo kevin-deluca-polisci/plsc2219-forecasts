@@ -145,7 +145,49 @@
   function rank(e) { return e === cls ? 3 : e === ref ? 2 : e.isPro ? 1 : 0; }
   function mean(a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0) / a.length; }
   // top cards: fundamentals vs. contest vs. professional and academic forecasts vs. markets
+  // headline banner: the average of the contest entries' projected seats (races favored), flagged outliers left out,
+  // and the share of entries whose projection gives Democrats each chamber
+  function headline(ok) {
+    var box = $("headline"), avg = avgSet(ok);
+    if (!avg.length) { box.hidden = true; return; }
+    var hs = mean(avg, function (e) { return e.hD; }), ss = mean(avg, function (e) { return e.sD; });
+    var hw = avg.filter(function (e) { return e.hD >= HOUSE_MAJ; }).length, sw = avg.filter(function (e) { return e.sD >= SENATE_MAJ; }).length;
+    var part = function (n, ch, wins) {
+      return "<div class='hl-part'><p class='hl-num num'>" + Math.round(n) + "</p><p class='hl-lab'>Democratic " + ch + " seats</p>" +
+        "<p class='hl-sub'>" + wins + " of " + avg.length + " entries (" + pct(wins / avg.length) + ") give Democrats the " + ch + "</p></div>";
+    };
+    box.innerHTML = "<div class='hl-left'><p class='lab'>The contest forecast</p><div class='hl-row'>" + part(hs, "House", hw) + part(ss, "Senate", sw) + "</div>" +
+      "<p class='hl-note'>Average projected seats (races favored) across " + avg.length + " contest entr" + (avg.length === 1 ? "y" : "ies") +
+      (ok.length > avg.length ? ", leaving out " + (ok.length - avg.length) + " flagged as outlier" + (ok.length - avg.length === 1 ? "" : "s") : "") + ".</p></div>" +
+      "<div class='hl-right'>" + headlineDots(avg, hs, ss) + "</div>";
+    box.hidden = false;
+  }
+  // dot strip beside the headline: one dot per entry at its projected seats, the majority line, and the average
+  function headlineDots(avg, hs, ss) {
+    var W = 420, L = 62, R = 14, rows = [["House", "hD", HOUSE_MAJ, hs], ["Senate", "sD", SENATE_MAJ, ss]], rowH = 104, H = rows.length * rowH + 4;
+    var svg = "<svg class='hl-svg' viewBox='0 0 " + W + " " + H + "' role='img' aria-label='Projected seats for each contest entry'>";
+    rows.forEach(function (rw, i) {
+      var vals = avg.map(function (e) { return { v: e[rw[1]], name: e.name }; }), maj = rw[2];
+      var lo = Math.floor(Math.min.apply(null, vals.map(function (d) { return d.v; }).concat([maj])) - 2);
+      var hi = Math.ceil(Math.max.apply(null, vals.map(function (d) { return d.v; }).concat([maj])) + 2);
+      var x = function (v) { return L + (v - lo) / (hi - lo) * (W - L - R); }, y = i * rowH + 54;
+      svg += "<text class='hl-ch' x='0' y='" + (y + 5) + "'>" + rw[0] + "</text>" +
+        "<line class='hl-axis' x1='" + L + "' x2='" + (W - R) + "' y1='" + y + "' y2='" + y + "'></line>" +
+        "<line class='maj' x1='" + x(maj - 0.5) + "' x2='" + x(maj - 0.5) + "' y1='" + (y - 40) + "' y2='" + (y + 26) + "'></line>" +
+        "<text class='hl-tick' x='" + (x(maj - 0.5) + 4) + "' y='" + (y - 38) + "'>" + maj + " for a majority</text>" +
+        "<text class='hl-tick' x='" + L + "' y='" + (y + 40) + "'>" + lo + "</text><text class='hl-tick' x='" + (W - R) + "' y='" + (y + 40) + "' text-anchor='end'>" + hi + "</text>";
+      var seen = {};
+      vals.sort(function (a, b) { return a.v - b.v; }).forEach(function (d) {
+        var k = Math.round(d.v), n = seen[k] = (seen[k] || 0) + 1, dy = (n % 2 ? 1 : -1) * Math.floor(n / 2) * 11;
+        svg += "<circle class='hl-dot' cx='" + x(d.v) + "' cy='" + (y + dy) + "' r='6' fill='" + (d.v >= maj ? "var(--likely-d)" : "var(--likely-r)") + "'><title>" + esc(d.name) + ": " + d.v + "</title></circle>";
+      });
+      svg += "<line class='avgline' x1='" + x(rw[3]) + "' x2='" + x(rw[3]) + "' y1='" + (y - 24) + "' y2='" + (y + 24) + "' style='stroke-dasharray:none;stroke-width:2.5'></line>" +
+        "<text class='avglab' x='" + x(rw[3]) + "' y='" + (y + 40) + "' text-anchor='middle'>avg. " + Math.round(rw[3]) + "</text>";
+    });
+    return svg + "</svg>";
+  }
   function summary(ok, avgRow) {
+    headline(ok);
     var html = "", seats = function (word, x) { return Math.round(x) + " seats"; }; // word: "median" or "avg.", said in the card note
     if (cls && !cls.error) html += cardHTML("Class Fundamentals", cls.H.pmaj, cls.Sn.pmaj, seats("median", cls.H.med), seats("median", cls.Sn.med),
       "The model PLSC 2219 built together in class. Median seats.");
