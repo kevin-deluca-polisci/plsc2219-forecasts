@@ -176,10 +176,12 @@
         "<line class='maj' x1='" + x(maj - 0.5) + "' x2='" + x(maj - 0.5) + "' y1='" + (y - 40) + "' y2='" + (y + 26) + "'></line>" +
         "<text class='hl-tick' x='" + (x(maj - 0.5) + 4) + "' y='" + (y - 38) + "'>" + maj + " for a majority</text>" +
         "<text class='hl-tick' x='" + L + "' y='" + (y + 40) + "'>" + lo + "</text><text class='hl-tick' x='" + (W - R) + "' y='" + (y + 40) + "' text-anchor='end'>" + hi + "</text>";
-      var seen = {};
+      // jitter: a fixed pseudo-random offset per entry (from its name, so dots don't move between visits),
+      // vertical within +/-20 px and horizontal within +/-0.3 seats, so tied entries don't sit in one line
+      var jit = function (s, salt) { var h = 2166136261; s = s + salt; for (var j = 0; j < s.length; j++) { h ^= s.charCodeAt(j); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000) / 1000 - 0.5; };
       vals.sort(function (a, b) { return a.v - b.v; }).forEach(function (d) {
-        var k = Math.round(d.v), n = seen[k] = (seen[k] || 0) + 1, dy = (n % 2 ? 1 : -1) * Math.floor(n / 2) * 11;
-        svg += "<circle class='hl-dot' cx='" + x(d.v) + "' cy='" + (y + dy) + "' r='6' fill='" + (d.v >= maj ? "var(--likely-d)" : "var(--likely-r)") + "'><title>" + esc(d.name) + ": " + d.v + "</title></circle>";
+        var dy = jit(d.name, "y" + rw[0]) * 40, dx = jit(d.name, "x" + rw[0]) * 0.6;
+        svg += "<circle class='hl-dot' cx='" + x(d.v + dx) + "' cy='" + (y + dy) + "' r='6' fill='" + (d.v >= maj ? "var(--likely-d)" : "var(--likely-r)") + "'><title>" + esc(d.name) + ": " + d.v + "</title></circle>";
       });
       svg += "<line class='avgline' x1='" + x(rw[3]) + "' x2='" + x(rw[3]) + "' y1='" + (y - 24) + "' y2='" + (y + 24) + "' style='stroke-dasharray:none;stroke-width:2.5'></line>" +
         "<text class='avglab' x='" + x(rw[3]) + "' y='" + (y + 40) + "' text-anchor='middle'>avg. " + Math.round(rw[3]) + "</text>";
