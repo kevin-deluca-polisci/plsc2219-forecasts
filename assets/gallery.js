@@ -25,6 +25,16 @@
   var races, notup, results = null, entries = [], cls = null, ref = null; // cls: the class model; ref: class model + polls
   var DEADLINE = new Date("2026-11-02T04:59:59Z");   // 11:59:59 pm Eastern, Sunday Nov 1
   var closed = Date.now() > DEADLINE.getTime();
+  // data/contest_summary.csv: anonymous seat counts for EVERY contest entry (opted in or not), written by
+  // contest/scripts/contest_summary.py. When present, the top banner uses it; the charts and table below still show
+  // only the entries in gallery.csv.
+  var csum = null;
+  getCSV("data/contest_summary.csv").then(function (t) {
+    csum = t.map(function (r) { return { hD: Number(r.house_seats), sD: Number(r.senate_seats), out: /^y/i.test(r.outlier || "") }; })
+            .filter(function (r) { return isFinite(r.hD) && isFinite(r.sD); });
+    if (!csum.length) csum = null;
+    if (races) render();
+  }).catch(function () {});
 
   // data/results_2026.csv (race_id, dem_share: the actual D-side share of the two-party vote, as a proportion,
   // final round in Maine and Alaska) is added once results are in; until then the accuracy column is blank.
@@ -148,7 +158,8 @@
   // headline banner: the average of the contest entries' projected seats (races favored), flagged outliers left out,
   // and the share of entries whose projection gives Democrats each chamber
   function headline(ok) {
-    var box = $("headline"), avg = avgSet(ok);
+    var box = $("headline"), avg = avgSet(ok), all = !!csum, nOut = ok.length - avg.length;
+    if (all) { avg = csum.filter(function (r) { return !r.out; }); nOut = csum.length - avg.length; }
     if (!avg.length) { box.hidden = true; return; }
     var hs = mean(avg, function (e) { return e.hD; }), ss = mean(avg, function (e) { return e.sD; });
     var hw = avg.filter(function (e) { return e.hD >= HOUSE_MAJ; }).length, sw = avg.filter(function (e) { return e.sD >= SENATE_MAJ; }).length;
@@ -157,8 +168,9 @@
         "<p class='hl-sub'>" + wins + " of " + avg.length + " entries (" + pct(wins / avg.length) + ") give Democrats the " + ch + "</p></div>";
     };
     box.innerHTML = "<div class='hl-left'><p class='lab'>The contest forecast</p><div class='hl-row'>" + part(hs, "House", hw) + part(ss, "Senate", sw) + "</div>" +
-      "<p class='hl-note'>Average projected seats (races favored) across " + avg.length + " contest entr" + (avg.length === 1 ? "y" : "ies") +
-      (ok.length > avg.length ? ", leaving out " + (ok.length - avg.length) + " flagged as outlier" + (ok.length - avg.length === 1 ? "" : "s") : "") + ".</p></div>" +
+      "<p class='hl-note'>Average projected seats (races favored) across " + (all ? "all " : "") + avg.length + " contest entr" + (avg.length === 1 ? "y" : "ies") +
+      (nOut > 0 ? ", leaving out " + nOut + " flagged as outlier" + (nOut === 1 ? "" : "s") : "") + "." +
+      (all ? " Individual forecasts below are shown only for entrants who opted in." : "") + "</p></div>" +
       "<div class='hl-right'>" + headlineDots(avg, hs, ss) + "</div>";
     box.hidden = false;
   }
@@ -167,7 +179,7 @@
     var W = 420, L = 62, R = 14, rows = [["House", "hD", HOUSE_MAJ, hs], ["Senate", "sD", SENATE_MAJ, ss]], rowH = 104, H = rows.length * rowH + 4;
     var svg = "<svg class='hl-svg' viewBox='0 0 " + W + " " + H + "' role='img' aria-label='Projected seats for each contest entry'>";
     rows.forEach(function (rw, i) {
-      var vals = avg.map(function (e) { return { v: e[rw[1]], name: e.name }; }), maj = rw[2];
+      var vals = avg.map(function (e, k) { return { v: e[rw[1]], name: e.name || "", seed: e.name || ("entry" + k) }; }), maj = rw[2];
       var lo = Math.floor(Math.min.apply(null, vals.map(function (d) { return d.v; }).concat([maj])) - 2);
       var hi = Math.ceil(Math.max.apply(null, vals.map(function (d) { return d.v; }).concat([maj])) + 2);
       var x = function (v) { return L + (v - lo) / (hi - lo) * (W - L - R); }, y = i * rowH + 54;
@@ -180,8 +192,8 @@
       // vertical within +/-20 px and horizontal within +/-0.3 seats, so tied entries don't sit in one line
       var jit = function (s, salt) { var h = 2166136261; s = s + salt; for (var j = 0; j < s.length; j++) { h ^= s.charCodeAt(j); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000) / 1000 - 0.5; };
       vals.sort(function (a, b) { return a.v - b.v; }).forEach(function (d) {
-        var dy = jit(d.name, "y" + rw[0]) * 40, dx = jit(d.name, "x" + rw[0]) * 0.6;
-        svg += "<circle class='hl-dot' cx='" + x(d.v + dx) + "' cy='" + (y + dy) + "' r='6' fill='" + (d.v >= maj ? "var(--likely-d)" : "var(--likely-r)") + "'><title>" + esc(d.name) + ": " + d.v + "</title></circle>";
+        var dy = jit(d.seed, "y" + rw[0]) * 40, dx = jit(d.seed, "x" + rw[0]) * 0.6;
+        svg += "<circle class='hl-dot' cx='" + x(d.v + dx) + "' cy='" + (y + dy) + "' r='6' fill='" + (d.v >= maj ? "var(--likely-d)" : "var(--likely-r)") + "'>" + (d.name ? "<title>" + esc(d.name) + ": " + d.v + "</title>" : "") + "</circle>";
       });
       svg += "<line class='avgline' x1='" + x(rw[3]) + "' x2='" + x(rw[3]) + "' y1='" + (y - 24) + "' y2='" + (y + 24) + "' style='stroke-dasharray:none;stroke-width:2.5'></line>" +
         "<text class='avglab' x='" + x(rw[3]) + "' y='" + (y + 40) + "' text-anchor='middle'>avg. " + Math.round(rw[3]) + "</text>";
