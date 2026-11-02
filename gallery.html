@@ -81,8 +81,12 @@
         <div class="seg" id="fcview" role="group" aria-label="Which forecasts to compare"><button type="button" data-v="contest" class="on">Contest</button><button type="button" data-v="published">All published forecasts</button></div>
         <p class="note">Contest: entries next to the class model, academic and professional averages, and markets. All published: every published forecast on its own. Applies to the charts and the table.</p>
       </div>
-      <p class="note">Median seats and 80% range, most to least Democratic. <strong><em>Bold italic</em></strong>: not a contest entry. Blue: Democratic majority. Red: Republican majority.<br>
-        <span class="key"><i class="dot" style="background:var(--likely-d)"></i>own simulations</span><span class="key"><i class="dot"></i>default uncertainty</span><span class="key"><i class="sq"></i>published forecast</span><span class="key"><i class="avgkey"></i>average of the forecasts shown</span></p>
+      <div class="viewbar">
+        <div class="seg" id="seatmode" role="group" aria-label="Seat measure"><button type="button" data-v="proj" class="on">Projected seats</button><button type="button" data-v="med">Median and 80% range</button></div>
+      </div>
+      <p class="note"><span id="seatnote-proj">Projected seats: the races each forecast favors Democrats in (published forecasts without race-level calls: their published seat number).</span><span id="seatnote-med" hidden>Median seats and 80% range from each forecast's simulations; entries sent without simulations are left out.</span>
+        Most to least Democratic. <strong><em>Bold italic</em></strong>: not a contest entry. Blue: Democratic majority. Red: Republican majority.<br>
+        <span class="key"><i class="dot" style="background:var(--likely-d)"></i>contest entry or class model</span><span class="key"><i class="sq"></i>published forecast</span><span class="key"><i class="avgkey"></i>average of the forecasts shown</span></p>
     </div>
     <div class="charts"><div id="chart-house"></div><div id="chart-senate"></div></div>
   </section>
@@ -90,7 +94,7 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Table</h2>
-      <p class="note">Most to least Democratic by House seats; by accuracy once results are in. Seats: races favored (median). Accuracy: average error in the Democratic vote share. <strong><em>Bold italic</em></strong> rows are not contest entries and are not ranked. The contest average (shown once there are two entries) pools the entries' simulations; academic and professional averages show the average chance and the median of their seat numbers. Click a column to sort.</p>
+      <p class="note">Most to least Democratic by House seats; by accuracy once results are in. Seats: races favored (median). Entries sent without simulations show races favored only, with no range or chances. Accuracy: average error in the Democratic vote share. <strong><em>Bold italic</em></strong> rows are not contest entries and are not ranked. The contest average (shown once there are two entries) pools the entries' simulations; academic and professional averages show the average chance and the median of their seat numbers. Click a column to sort.</p>
     </div>
     <div class="table-wrap"><table id="table"></table></div>
     <ol class="fnotes" id="fc-notes"></ol>

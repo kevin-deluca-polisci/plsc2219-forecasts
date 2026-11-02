@@ -72,6 +72,12 @@
               e.H = FC.chamber(A.S.h, HOUSE_MAJ); e.Sn = FC.chamber(A.S.s, SENATE_MAJ);
               e.flag = A.problems.length > 0;
               e.both = both(A.S.h, A.S.s);
+              if (!e.own && !e.isClass) { // no seat_sims.csv: show the entrant's own call (races favored) with no range or chances
+                e.noSims = true;
+                e.H = { med: e.hD, lo: e.hD, hi: e.hD, pmaj: null, range: false };
+                e.Sn = { med: e.sD, lo: e.sD, hi: e.sD, pmaj: null, range: false };
+                e.both = null;
+              }
               e.err = accuracy(A.races);
             }
           }
@@ -169,7 +175,25 @@
 
 
   // one row per forecaster: 80% seat range (bar) and median (dot), with the majority line
+  // seat charts: "proj" (default) plots projected seats, the races each forecast favors Democrats in, with no bars
+  // (published forecasts without race-level calls use their published seat number); "med" plots the median and 80%
+  // range from each forecast's simulations and leaves out entries sent without simulations
+  var seatMode = "proj";
+  function plotRows(rows, key) {
+    return rows.map(function (e) {
+      if (e[key].none) return null;
+      if (seatMode === "med") return e.noSims && !e.isPro ? null : e;
+      var n = e.isGroupAvg ? e.proj[key] : key === "H" ? e.hD : e.sD;
+      if (n == null) n = e[key].med; // a published number with no race-level calls behind it
+      var c = {}, o = {}, k;
+      for (k in e[key]) c[k] = e[key][k];
+      c.med = n; c.lo = n; c.hi = n; c.range = false; c.proj = true;
+      for (k in e) o[k] = e[k];
+      o[key] = c; return o;
+    }).filter(Boolean);
+  }
   function strip(rows, key, maj, label) {
+    rows = plotRows(rows, key);
     rows = rows.filter(function (e) { return !e[key].none; }).sort(function (a, b) { return (b[key].med - a[key].med) || (rank(b) - rank(a)); }); // most to least Democratic
     var lo = Math.floor(Math.min.apply(null, rows.map(function (e) { return e[key].lo; }).concat([maj])) - 3);
     var hi = Math.ceil(Math.max.apply(null, rows.map(function (e) { return e[key].hi; }).concat([maj])) + 3);
@@ -191,9 +215,9 @@
       var y = top + i * rowH + rowH / 2, c = e[key], col = c.med >= maj ? "var(--likely-d)" : "var(--likely-r)";
       svg += "<g class='row' data-i='" + i + "'><rect class='hit' x='0' y='" + (y - rowH / 2) + "' width='" + W + "' height='" + rowH + "'></rect>" +
         "<text class='name" + (e.isClass || e.isPro || e.isAvg ? " ref" : "") + "' x='" + (L - 10) + "' y='" + (y + 4) + "' text-anchor='end'>" + nameLines(e, L - 10, y) + "</text>" +
-        (e.isPro && !c.range ? "" : "<line class='rng' x1='" + x(c.lo) + "' x2='" + x(c.hi) + "' y1='" + y + "' y2='" + y + "' stroke='" + col + "'></line>") +
+        ((e.isPro || e.noSims) && !c.range ? "" : "<line class='rng' x1='" + x(c.lo) + "' x2='" + x(c.hi) + "' y1='" + y + "' y2='" + y + "' stroke='" + col + "'></line>") +
         (e.isPro ? "<rect x='" + (x(c.med) - 5) + "' y='" + (y - 5) + "' width='10' height='10' fill='" + col + "'></rect></g>"
-                 : "<circle cx='" + x(c.med) + "' cy='" + y + "' r='5.5' fill='" + (e.own ? col : "var(--card)") + "' stroke='" + col + "' stroke-width='2'></circle></g>");
+                 : "<circle cx='" + x(c.med) + "' cy='" + y + "' r='5.5' fill='" + col + "' stroke='" + col + "' stroke-width='2'></circle></g>");
     });
     svg += "</svg>";
     var div = document.createElement("div"); div.className = "card";
@@ -202,10 +226,10 @@
     div.querySelectorAll("g.row").forEach(function (g) {
       var e = rows[Number(g.dataset.i)], c = e[key];
       var show = function (ev) {
-        tip.innerHTML = "<b>" + esc(e.name) + "</b><div class='row'><span>Median</span><span class='num'>" + Math.round(c.med) + " seats</span></div>" +
-          (!e.isPro || c.range ? "<div class='row'><span>80% range</span><span class='num'>" + Math.round(c.lo) + " to " + Math.round(c.hi) + "</span></div>" : "") +
+        tip.innerHTML = "<b>" + esc(e.name) + "</b><div class='row'><span>" + (c.proj ? "Projected" : "Median") + "</span><span class='num'>" + Math.round(c.med) + " seats</span></div>" +
+          (!c.proj && ((!e.isPro && !e.noSims) || c.range) ? "<div class='row'><span>80% range</span><span class='num'>" + Math.round(c.lo) + " to " + Math.round(c.hi) + "</span></div>" : "") +
           (c.pmaj != null ? "<div class='row'><span>D majority</span><span class='num'>" + pct(c.pmaj) + "</span></div>" : "") +
-          (e.isPro ? "<div class='row'><span>Published forecast</span><span></span></div>" : e.own ? "" : "<div class='row'><span>Uncertainty</span><span>default</span></div>");
+          (e.isPro ? "<div class='row'><span>Published forecast</span><span></span></div>" : e.noSims ? "<div class='row'><span>No simulations sent</span><span></span></div>" : "");
         tip.hidden = false; var b = g.getBoundingClientRect();
         tip.style.left = Math.min(Math.max(8, (ev.clientX || b.left) - tip.offsetWidth / 2), window.innerWidth - tip.offsetWidth - 8) + "px";
         tip.style.top = Math.max(8, b.top - tip.offsetHeight - 6) + "px";
@@ -255,13 +279,15 @@
         c[1] + (c[0] === sortKey ? (sortDir > 0 ? " ▲" : " ▼") : "") + "</th>"; }).join("") + "</tr></thead>";
     var fnList = numberFootnotes(all);
     var tb = all.map(function (e) { return e.isPro ? proRow(e) : entryRow(e); }).join("");
+    function seatCell(e, k, n) { return e.noSims ? String(n) : n + " (" + Math.round(e[k].med) + ")"; }
+    function chanceCell(p) { return p == null ? "" : pct(p); } // missing chances stay blank
     function entryRow(e) {
       return "<tr" + (e.isClass || e.isAvg ? " class='refrow'" : "") + "><td>" + (e.isClass ? "<a href='" + esc(e.url) + "'><strong><em>" + esc(e.name) + "</em></strong></a>" :
         e.isAvg ? "<strong><em>" + esc(e.name) + " (" + e.n + ")</em></strong>" : nameLink(e)) +
         (e.flag ? " <span class='badge' title='The site shows a warning about this forecast file'>check file</span>" : "") + "</td>" +
-        "<td class='r num'>" + e.hD + " (" + Math.round(e.H.med) + ")</td><td class='r num'>" + pct(e.H.pmaj) + "</td>" +
-        "<td class='r num'>" + e.sD + " (" + Math.round(e.Sn.med) + ")</td><td class='r num'>" + pct(e.Sn.pmaj) + "</td>" +
-        "<td class='r num'>" + (e.both == null ? "" : pct(e.both)) + "</td>" +
+        "<td class='r num'>" + seatCell(e, "H", e.hD) + "</td><td class='r num'>" + chanceCell(e.H.pmaj) + "</td>" +
+        "<td class='r num'>" + seatCell(e, "Sn", e.sD) + "</td><td class='r num'>" + chanceCell(e.Sn.pmaj) + "</td>" +
+        "<td class='r num'>" + chanceCell(e.both) + "</td>" +
         "<td class='r num'>" + accText(e) + "</td><td class='r num'>" + esc(e.asof || "") + "</td></tr>";
     }
     $("table").innerHTML = head + "<tbody>" + tb + "</tbody>";
@@ -318,14 +344,14 @@
   }
 
   function proRow(e) {
-    var na = "<span class='muted'>n/a</span>", dag = "<sup class='fn'>&dagger;</sup>";
+    var na = "", dag = "<sup class='fn'>&dagger;</sup>";
     var seats = function (c, n) { return c.none ? na : (n != null ? n + " " : "") + "(" + Math.round(c.med) + ")" + (c.estSeats ? dag : ""); };
-    var chance = function (c) { return c.pmaj == null ? na : (c.pmaj > 0.995 && c.pmaj < 1 ? "&gt;99%" : pct(c.pmaj)) + (c.estP ? dag : ""); };
+    var chance = function (c) { return c.pmaj == null ? "" : (c.pmaj > 0.995 && c.pmaj < 1 ? "&gt;99%" : pct(c.pmaj)) + (c.estP ? dag : ""); };
     var acc = !e.scorable ? na : e.err ? "reference <span class='muted'>(" + e.err.mae.toFixed(2) + " pts)</span>" : "<span class='muted'>after results</span>";
     return "<tr class='refrow'><td><strong><em>" + nameLink(e) + "</em></strong>" + (fnNum[e.name] ? "<sup class='fn'><a href='#fn" + fnNum[e.name] + "'>" + fnNum[e.name] + "</a></sup>" : "") + "</td>" +
       "<td class='r num'>" + seats(e.H, e.hD) + "</td><td class='r num'>" + chance(e.H) + "</td>" +
       "<td class='r num'>" + seats(e.Sn, e.sD) + "</td><td class='r num'>" + chance(e.Sn) + "</td>" +
-      "<td class='r num'>" + na + "</td><td class='r num'>" + acc + "</td><td class='r num'>" + asofCell(e) + "</td></tr>";
+      "<td class='r num'></td><td class='r num'>" + acc + "</td><td class='r num'>" + asofCell(e) + "</td></tr>";
   }
   // footnotes, numbered in the order the rows appear in the table
   var fnNum = {};
@@ -356,7 +382,9 @@
         var med = quant(s.map(function (e) { return e[k].med; }), 0.5); // median of the forecasts' seat numbers
         return { med: med, lo: med, hi: med, range: false, pmaj: p.length ? mean(p, function (e) { return e[k].pmaj; }) : null, np: p.length, ns: s.length };
       };
+      var pj = function (k, f) { var v = m.filter(function (e) { return !e[k].none; }).map(function (e) { return e[f] != null ? e[f] : e[k].med; }); return v.length ? quant(v, 0.5) : null; };
       out.push({ name: g[1] + " (" + m.length + ")", short: g[1], isPro: true, isGroupAvg: true, group: g[0], members: m,
+                 proj: { H: pj("H", "hD"), Sn: pj("Sn", "sD") },
                  H: side("H"), Sn: side("Sn"), asof: "" });
     });
     return out;
@@ -444,21 +472,24 @@
   function contestAverage(ok) {
     var avg = avgSet(ok);
     if (avg.length < 2) return null;
-    var K = 4000, ph = [], ps = [];
-    avg.forEach(function (e) { // the same number of evenly spaced draws from each entry
+    var K = 4000, ph = [], ps = [], sim = avg.filter(function (e) { return !e.noSims; });
+    sim.forEach(function (e) { // the same number of evenly spaced draws from each entry with its own simulations
       var h = e.A.S.h, sn = e.A.S.s;
       for (var i = 0; i < K; i++) { ph.push(h[Math.floor(i * h.length / K)]); ps.push(sn[Math.floor(i * sn.length / K)]); }
     });
-    var side = function (xs, maj, f) { var c = FC.chamber(xs, maj); c.pmaj = mean(avg, f); return c; };
+        var side = function (xs, maj, f, pt) {
+      if (!sim.length) return { med: pt, lo: pt, hi: pt, pmaj: null, range: false }; // nobody sent simulations
+      var c = FC.chamber(xs, maj); c.pmaj = mean(sim, f); return c; };
     var share = {}, n = {};
     avg.forEach(function (e) { e.A.races.forEach(function (r) { if (ok01(r.share)) { share[r.race_id] = (share[r.race_id] || 0) + r.share; n[r.race_id] = (n[r.race_id] || 0) + 1; } }); });
     var rs = avg[0].A.races.map(function (r) { return { race_id: r.race_id, office: r.office, scored: r.scored, share: n[r.race_id] ? share[r.race_id] / n[r.race_id] : null }; });
-    var boths = avg.filter(function (e) { return e.both != null; });
-    return { name: "Contest average", isAvg: true, n: avg.length, left: ok.length - avg.length, own: avg.every(function (e) { return e.own; }),
-             H: side(ph, HOUSE_MAJ, function (e) { return e.H.pmaj; }), Sn: side(ps, SENATE_MAJ, function (e) { return e.Sn.pmaj; }),
-             hD: rs.filter(function (r) { return r.office === "house" && r.share > 0.5; }).length,
-             sD: avg[0].A.demNotUp + rs.filter(function (r) { return r.office === "senate" && r.share > 0.5; }).length,
-             both: boths.length === avg.length ? mean(avg, function (e) { return e.both; }) : null,
+    var boths = sim.filter(function (e) { return e.both != null; });
+    var hD = rs.filter(function (r) { return r.office === "house" && r.share > 0.5; }).length,
+        sD = avg[0].A.demNotUp + rs.filter(function (r) { return r.office === "senate" && r.share > 0.5; }).length;
+    return { name: "Contest average", isAvg: true, n: avg.length, nSims: sim.length, left: ok.length - avg.length, own: true, noSims: !sim.length,
+             H: side(ph, HOUSE_MAJ, function (e) { return e.H.pmaj; }, hD), Sn: side(ps, SENATE_MAJ, function (e) { return e.Sn.pmaj; }, sD),
+             hD: hD, sD: sD,
+             both: sim.length && boths.length === sim.length ? mean(sim, function (e) { return e.both; }) : null,
              err: accuracy(rs), asof: "" };
   }
 
@@ -467,7 +498,7 @@
     if (avg.length) {
       var acc = {};
       avg.forEach(function (e) { e.A.races.forEach(function (r) {
-        var a = acc[r.race_id] || (acc[r.race_id] = { p: 0, np: 0, s: 0, ns: 0 }), p = pOf(r);
+        var a = acc[r.race_id] || (acc[r.race_id] = { p: 0, np: 0, s: 0, ns: 0 }), p = r.p; // entrants' own win probabilities only
         if (ok01(p)) { a.p += p; a.np++; }
         if (ok01(r.share)) { a.s += r.share; a.ns++; }
       }); });
@@ -533,6 +564,14 @@
   function okEntries() { return entries.filter(function (e) { return !e.error; }); }
   function benchmarks(ok) { benchRaces(ok); }
 
+  $("seatmode").querySelectorAll("button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      $("seatmode").querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b === btn); });
+      seatMode = btn.dataset.v;
+      $("seatnote-proj").hidden = seatMode !== "proj"; $("seatnote-med").hidden = seatMode !== "med";
+      render();
+    });
+  });
   $("fcview").querySelectorAll("button").forEach(function (btn) {
     btn.addEventListener("click", function () {
       $("fcview").querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b === btn); });
