@@ -46,6 +46,12 @@
   .charts .majlab { fill: var(--ink); font-size: 11px; }
   .charts .avgline { stroke: var(--focus); stroke-width: 1.5; stroke-dasharray: 2 3; }
   .charts .avglab { fill: var(--focus); font-size: 11px; }
+  :root { --result: #8a5a00; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --result: #f0b54a; } }
+  :root[data-theme="dark"] { --result: #f0b54a; }
+  .charts .resline, .hl-svg .resline { stroke: var(--result); stroke-width: 2.5; }
+  .charts .reslab { fill: var(--result); font-size: 11px; font-weight: 700; }
+  .hl-svg .reslab { fill: var(--result); font-size: 12px; font-weight: 700; }
   .avgkey { display: inline-block; width: 18px; border-top: 2px dotted var(--focus); vertical-align: middle; }
   .charts .name { fill: var(--ink-2); font-size: 12px; }
   .charts .name.ref { fill: var(--ink); font-weight: 700; font-style: italic; }
@@ -112,9 +118,10 @@
   <section class="block">
     <div class="block-head">
       <h2>Forecast Table</h2>
-      <p class="note">Most to least Democratic by House seats; by accuracy once results are in. Seats: races favored (median). Entries sent without simulations show races favored only, with no range or chances. Accuracy: average error in the Democratic vote share. <strong><em>Bold italic</em></strong> rows are not contest entries and are not ranked. The contest average (shown once there are two entries) pools the entries' simulations; academic and professional averages show the average chance and the median of their seat numbers. Click a column to sort.</p>
+      <p class="note">Ranked by accuracy: average error in the Democratic vote share, lowest first. Every row with race-level vote shares is ranked, contest entries and benchmarks alike. Seats: races favored (median). Entries sent without simulations show races favored only, with no range or chances. <strong><em>Bold italic</em></strong> rows are not contest entries. The contest average (shown once there are two entries) pools the entries' simulations; academic and professional averages show the average chance and the median of their seat numbers. Click a column to sort.</p>
     </div>
     <div class="table-wrap"><table id="table"></table></div>
+    <p class="note" id="score-note" hidden></p>
     <ol class="fnotes" id="fc-notes"></ol>
   </section>
 
