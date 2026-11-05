@@ -140,7 +140,28 @@
   function callCells(e) {
     if (!SCORES) return "";
     var c = e.err, f = function (k, n) { return c && c[k] != null && c[n] ? c[k] + "<span class='muted'>/" + c[n] + "</span>" : ""; };
-    return "<td class='r num'>" + f("called", "n") + "</td><td class='r num'>" + f("close", "closeN") + "</td>";
+    return "<td class='r num'" + shade(e, "rc") + ">" + f("called", "n") + "</td><td class='r num'" + shade(e, "cc") + ">" + f("close", "closeN") + "</td>";
+  }
+  // shading of the score cells: one hue, darker = better, by rank within the rows shown (so one far-off forecast,
+  // like Fair, does not wash out everyone else); ties share a shade. SHADE is rebuilt by table() for each view.
+  var SHADE = {};
+  var SCORE_KEYS = { rk: function (e) { return e.err ? -e.err.mae : null; },
+                     rc: function (e) { return e.err && e.err.called != null && e.err.n ? e.err.called / e.err.n : null; },
+                     cc: function (e) { return e.err && e.err.close != null && e.err.closeN ? e.err.close / e.err.closeN : null; } };
+  function buildShades(rows) {
+    SHADE = {};
+    Object.keys(SCORE_KEYS).forEach(function (k) {
+      var f = SCORE_KEYS[k], vals = [];
+      rows.forEach(function (e) { var v = f(e); if (v != null && vals.indexOf(v) < 0) vals.push(v); });
+      vals.sort(function (a, b) { return b - a; }); // best first
+      var m = new Map();
+      rows.forEach(function (e) { var v = f(e); if (v != null) m.set(e, vals.length > 1 ? 1 - vals.indexOf(v) / (vals.length - 1) : 1); });
+      SHADE[k] = m;
+    });
+  }
+  function shade(e, k) {
+    var t = SCORES && SHADE[k] ? SHADE[k].get(e) : undefined;
+    return t == null ? "" : " style='background:color-mix(in srgb, var(--score) " + Math.round(6 + 34 * t) + "%, transparent)'";
   }
   function accText(e) {
     if (!e.err) return SCORES ? "" : "<span class='muted'>after results</span>";
@@ -352,6 +373,7 @@
   function table(rows) {
     applyScores(rows);
     rankAll(rows);
+    buildShades(rows);
     var cols = [
       ["name", "Forecaster", function (e) { return e.name.toLowerCase(); }],
       ["hs", "House seats: projected (median)", function (e) { return e.H.none ? -1 : e.H.med; }],
@@ -382,14 +404,14 @@
         "<td class='r num'>" + seatCell(e, "H", e.hD) + "</td><td class='r num'>" + chanceCell(e.H.pmaj) + "</td>" +
         "<td class='r num'>" + seatCell(e, "Sn", e.sD) + "</td><td class='r num'>" + chanceCell(e.Sn.pmaj) + "</td>" +
         "<td class='r num'>" + chanceCell(e.both) + "</td>" +
-        "<td class='r num'>" + accText(e) + "</td>" + callCells(e) + "<td class='r num'>" + esc(e.asof || "") + "</td></tr>";
+        "<td class='r num'" + shade(e, "rk") + ">" + accText(e) + "</td>" + callCells(e) + "<td class='r num'>" + esc(e.asof || "") + "</td></tr>";
     }
     $("table").innerHTML = head + "<tbody>" + tb + "</tbody>";
     $("score-note").hidden = !SCORES;
     if (SCORES) $("score-note").innerHTML = "<strong>Preliminary scores</strong>, from returns as of " + day(RESULT && RESULT.asof) +
       (RESULT && RESULT.uncalled ? " (" + RESULT.uncalled + " races not yet called, scored on the votes counted so far)" : "") +
       ". Rank: average error in the Democratic share of the two-party vote, in points, over the races scored; lower is better. " +
-      "Races called: winners called right. Close races: decided by under 5 points so far" + (closeN() ? " (" + closeN() + ")" : "") + ". " +
+      "Shading: darker green is better, within the forecasts shown. Races called: winners called right. Close races: decided by under 5 points so far" + (closeN() ? " (" + closeN() + ")" : "") + ". " +
       "A forecast can rank well on vote-share error and still miss seats that were decided by a point or two. " +
       "Rows without race-level vote shares are not ranked.";
     proFootnotes(fnList, all);
@@ -452,7 +474,7 @@
     return "<tr class='refrow'><td><strong><em>" + nameLink(e) + "</em></strong>" + (fnNum[e.name] ? "<sup class='fn'><a href='#fn" + fnNum[e.name] + "'>" + fnNum[e.name] + "</a></sup>" : "") + "</td>" +
       "<td class='r num'>" + seats(e.H, e.hD) + "</td><td class='r num'>" + chance(e.H) + "</td>" +
       "<td class='r num'>" + seats(e.Sn, e.sD) + "</td><td class='r num'>" + chance(e.Sn) + "</td>" +
-      "<td class='r num'></td><td class='r num'>" + acc + "</td>" + callCells(e) + "<td class='r num'>" + asofCell(e) + "</td></tr>";
+      "<td class='r num'></td><td class='r num'" + shade(e, "rk") + ">" + acc + "</td>" + callCells(e) + "<td class='r num'>" + asofCell(e) + "</td></tr>";
   }
   // footnotes, numbered in the order the rows appear in the table
   var fnNum = {};

@@ -46,9 +46,9 @@
   .charts .majlab { fill: var(--ink); font-size: 11px; }
   .charts .avgline { stroke: var(--focus); stroke-width: 1.5; stroke-dasharray: 2 3; }
   .charts .avglab { fill: var(--focus); font-size: 11px; }
-  :root { --result: #8a5a00; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --result: #f0b54a; } }
-  :root[data-theme="dark"] { --result: #f0b54a; }
+  :root { --result: #8a5a00; --score: #1f9d6b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --result: #f0b54a; --score: #3cc48c; } }
+  :root[data-theme="dark"] { --result: #f0b54a; --score: #3cc48c; }
   .charts .resline, .hl-svg .resline { stroke: var(--result); stroke-width: 2.5; }
   .charts .reslab { fill: var(--result); font-size: 11px; font-weight: 700; }
   .hl-svg .reslab { fill: var(--result); font-size: 12px; font-weight: 700; }
