@@ -24,6 +24,7 @@ Writes, in this repo:
                             close_called / close_n  the same, over the races decided by under 5 points so far
                             brier   Brier score of the win probabilities in the competitive races
                                     (brier_competitive in the scores file); blank without probabilities
+                            brier_all  the same over all scored races (brier in the scores file)
   data/scores/result.csv  chamber,seats,asof,uncalled: the seat totals drawn as the "Result" line on the seat charts.
 
 The Contest average is scored the way the page builds it: the average of the vote shares of the gallery entries
@@ -108,14 +109,15 @@ def main():
     out = []
     for r in rows(a.scores):
         lab = r["label"].strip()
-        if lab in DROP or (num(r.get("mae")) is None and num(r.get("brier_competitive")) is None):
+        if lab in DROP or (num(r.get("mae")) is None and num(r.get("brier_competitive")) is None and num(r.get("brier")) is None):
             continue
         name = RENAME.get(lab, lab)
         b = num(r.get("brier_competitive"))
         row = {"name": name, "mae": "%.2f" % num(r["mae"]) if num(r.get("mae")) is not None else "",
                "n_races": r.get("n_races_scored", "") if num(r.get("mae")) is not None else "",
                "called": r.get("races_called", ""), "close_called": "", "close_n": "",
-               "brier": "%.4f" % b if b is not None else ""}
+               "brier": "%.4f" % b if b is not None else "",
+               "brier_all": "%.4f" % num(r["brier"]) if num(r.get("brier")) is not None else ""}
         if row["mae"] and name in files and os.path.exists(files[name]):
             sh = shares_of(files[name])
             c, m = calls(sh, scored)
@@ -131,7 +133,7 @@ def main():
         c, m = calls(avg, scored)
         cc, cm = calls(avg, close)
         row = {"name": "Contest average", "mae": "%.2f" % (sum(errs) / len(errs)), "n_races": str(len(errs)),
-               "called": c, "close_called": cc, "close_n": cm, "brier": ""}
+               "called": c, "close_called": cc, "close_n": cm, "brier": "", "brier_all": ""}
         # Brier: the average of the entrants' own win probabilities in each competitive race (entrants who gave them)
         if a.competitive:
             comp = {r["race_id"] for r in rows(a.competitive)}
@@ -149,11 +151,14 @@ def main():
             sq = [(pp[k] / pn[k] - (1 if dem_won[k] else 0)) ** 2 for k in scored if k in comp and k in pp]
             if sq:
                 row["brier"] = "%.4f" % (sum(sq) / len(sq))
+            sq = [(pp[k] / pn[k] - (1 if dem_won[k] else 0)) ** 2 for k in scored if k in pp]
+            if sq:
+                row["brier_all"] = "%.4f" % (sum(sq) / len(sq))
         out.append(row)
 
     os.makedirs(os.path.join(HERE, "data", "scores"), exist_ok=True)
     with open(os.path.join(HERE, "data", "scores", "scores.csv"), "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, ["name", "mae", "n_races", "called", "close_called", "close_n", "brier"])
+        w = csv.DictWriter(f, ["name", "mae", "n_races", "called", "close_called", "close_n", "brier", "brier_all"])
         w.writeheader()
         out.sort(key=lambda r: float(r["mae"]) if r["mae"] else 99)
         w.writerows(out)
@@ -164,8 +169,8 @@ def main():
         w.writerow(["senate", a.senate, a.asof, a.uncalled])
     print("wrote data/scores/scores.csv (%d rows) and data/scores/result.csv" % len(out))
     for r in out:
-        print("  %-28s %-5s called %s/%s  close %s/%s  brier %s" % (r["name"], r["mae"], r["called"], r["n_races"],
-                                                                 r["close_called"], r["close_n"], r["brier"]))
+        print("  %-28s %-5s called %s/%s  close %s/%s  brier %s / all %s" % (r["name"], r["mae"], r["called"], r["n_races"],
+              r["close_called"], r["close_n"], r["brier"], r["brier_all"]))
 
 
 if __name__ == "__main__":

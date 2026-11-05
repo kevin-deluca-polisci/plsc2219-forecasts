@@ -4,7 +4,7 @@ The Forecast Table ranks its rows by these scores, and the seat charts mark the 
 
 | File | What |
 |---|---|
-| `scores.csv` | `name`, `mae`, `n_races`, `called`, `close_called`, `close_n`, `brier`: average error (points of two-party vote share), winners called right, winners called right in the races decided by under 5 points, and the Brier score of the win probabilities in the 90 competitive races (`brier_competitive`), for each forecast shown in the gallery, under the gallery's names. Includes the Contest average. |
+| `scores.csv` | `name`, `mae`, `n_races`, `called`, `close_called`, `close_n`, `brier`, `brier_all`: average error (points of two-party vote share), winners called right, winners called right in the races decided by under 5 points, and the Brier score of the win probabilities in the 90 competitive races (`brier_competitive`) and in all scored races (`brier`), for each forecast shown in the gallery, under the gallery's names. Includes the Contest average. |
 | `result.csv` | `chamber`, `seats`, `asof`, `uncalled`: the Democratic seat totals drawn as the "Expected result" lines, the date of the returns, and the races not yet called. |
 
 Both are written by `tools/make_scores.py` from the contest session's `scores_gallery_safe_<date>.csv` and `results_2026.csv`. The results file and Split Ticket's race file are only read, never copied here, so no race-level results or private race files are published. To refresh after new returns:

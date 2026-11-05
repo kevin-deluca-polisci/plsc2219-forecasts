@@ -49,8 +49,8 @@
     .then(function (res) {
       races = res[0]; notup = res[1]; results = res[3];
       if (res[5] && res[5].length) { SCORES = {}; res[5].forEach(function (r) {
-        var m = FC.num(r.mae), b = FC.num(r.brier); m = m != null && !isNaN(m) ? m : null; b = b != null && !isNaN(b) ? b : null;
-        if (m != null || b != null) SCORES[r.name] = { mae: m, n: Number(r.n_races), called: FC.num(r.called), close: FC.num(r.close_called), closeN: FC.num(r.close_n), brier: b }; }); }
+        var ok = function (v) { v = FC.num(v); return v != null && !isNaN(v) ? v : null; }, m = ok(r.mae), b = ok(r.brier), ba = ok(r.brier_all);
+        if (m != null || b != null || ba != null) SCORES[r.name] = { mae: m, n: Number(r.n_races), called: ok(r.called), close: ok(r.close_called), closeN: ok(r.close_n), brier: b, brierAll: ba }; }); }
       if (res[6] && res[6].length) { RESULT = {}; res[6].forEach(function (r) { var v = Number(r.seats); if (isFinite(v)) { RESULT[r.chamber === "house" ? "H" : "Sn"] = v; RESULT.asof = r.asof; RESULT.uncalled = Number(r.uncalled) || 0; } }); }
       if (closed) {
         $("frozen").innerHTML = "<strong>Entries are closed.</strong> The deadline was 11:59 pm Eastern on Sunday, November 1.";
@@ -131,7 +131,7 @@
   function closeN() { var m = 0; for (var k in SCORES) if (SCORES[k].closeN > m) m = SCORES[k].closeN; return m; }
   function applyScores(rows) {
     if (!SCORES) return;
-    rows.forEach(function (e) { var s = SCORES[e.name]; e.err = s ? { mae: s.mae, n: s.n, called: s.called, close: s.close, closeN: s.closeN, brier: s.brier } : null; });
+    rows.forEach(function (e) { var s = SCORES[e.name]; e.err = s ? { mae: s.mae, n: s.n, called: s.called, close: s.close, closeN: s.closeN, brier: s.brier, brierAll: s.brierAll } : null; });
   }
   // rank the rows shown (contest entries and benchmarks alike) by error, lowest first; ties share a rank
   function rankAll(rows) {
@@ -143,13 +143,17 @@
     if (!SCORES) return "";
     var c = e.err, f = function (k, n) { return c && c[k] != null && c[n] ? c[k] + "<span class='muted'>/" + c[n] + "</span>" : ""; };
     return "<td class='r num'" + shade(e, "rc") + ">" + f("called", "n") + "</td><td class='r num'" + shade(e, "cc") + ">" + f("close", "closeN") + "</td>" +
-      "<td class='r num'" + shade(e, "br") + ">" + (c && c.brier != null ? c.brier.toFixed(3) : "") + "</td>";
+      "<td class='r num'" + shade(e, "br") + ">" + (c && c.brier != null ? c.brier.toFixed(3) : "") + "</td>" +
+      "<td class='r num'" + shade(e, "ba") + ">" + (c && c.brierAll != null ? c.brierAll.toFixed(3) : "") + "</td>";
   }
+  // the score cells, first after the name: rank (avg. error), then the calls and Brier columns once scores exist
+  function scoreCells(e, acc) { return "<td class='r num'" + shade(e, "rk") + ">" + acc + "</td>" + callCells(e); }
   // shading of the score cells: one hue, darker = better, by rank within the rows shown (so one far-off forecast,
   // like Fair, does not wash out everyone else); ties share a shade. SHADE is rebuilt by table() for each view.
   var SHADE = {};
   var SCORE_KEYS = { rk: function (e) { return e.err && e.err.mae != null ? -e.err.mae : null; },
                      br: function (e) { return e.err && e.err.brier != null ? -e.err.brier : null; },
+                     ba: function (e) { return e.err && e.err.brierAll != null ? -e.err.brierAll : null; },
                      rc: function (e) { return e.err && e.err.called != null && e.err.n ? e.err.called / e.err.n : null; },
                      cc: function (e) { return e.err && e.err.close != null && e.err.closeN ? e.err.close / e.err.closeN : null; } };
   function buildShades(rows) {
@@ -378,20 +382,22 @@
     applyScores(rows);
     rankAll(rows);
     buildShades(rows);
+    // scores first (rank, calls, Brier), then the forecast itself; "As of" only before results are in
     var cols = [
       ["name", "Forecaster", function (e) { return e.name.toLowerCase(); }],
+      ["rk", "Accuracy rank (avg. error)", function (e) { return e.err && e.err.mae != null ? e.err.mae : 1e9; }],
+      ["rc", "Races called", function (e) { return e.err && e.err.called != null ? e.err.called / e.err.n : -1; }],
+      ["cc", "Close races called", function (e) { return e.err && e.err.close != null ? e.err.close / e.err.closeN : -1; }],
+      ["br", "Brier: competitive races", function (e) { return e.err && e.err.brier != null ? e.err.brier : 1e9; }],
+      ["ba", "Brier: all races", function (e) { return e.err && e.err.brierAll != null ? e.err.brierAll : 1e9; }],
       ["hs", "House seats: projected (median)", function (e) { return e.H.none ? -1 : e.H.med; }],
       ["hp", "House: D majority", function (e) { return e.H.pmaj == null ? -1 : e.H.pmaj; }],
       ["ss", "Senate seats: projected (median)", function (e) { return e.Sn.none ? -1 : e.Sn.med; }],
       ["sp", "Senate: D control", function (e) { return e.Sn.pmaj == null ? -1 : e.Sn.pmaj; }],
       ["both", "Both chambers: D", function (e) { return e.both == null ? -1 : e.both; }],
-      ["rk", "Accuracy rank (avg. error)", function (e) { return e.err && e.err.mae != null ? e.err.mae : 1e9; }],
-      ["rc", "Races called", function (e) { return e.err && e.err.called != null ? e.err.called / e.err.n : -1; }],
-      ["cc", "Close races called", function (e) { return e.err && e.err.close != null ? e.err.close / e.err.closeN : -1; }],
-      ["br", "Brier score", function (e) { return e.err && e.err.brier != null ? e.err.brier : 1e9; }],
       ["as", "As of", function (e) { return e.asof || ""; }]
     ];
-    if (!SCORES) cols = cols.filter(function (c) { return c[0] !== "rc" && c[0] !== "cc" && c[0] !== "br"; }); // the calls columns come with the scores
+    cols = cols.filter(function (c) { return SCORES ? c[0] !== "as" : ["rc", "cc", "br", "ba"].indexOf(c[0]) < 0; });
     if (!sortKey) { var scored = rows.some(function (e) { return e.err; }); sortKey = scored ? "rk" : "hs"; sortDir = scored ? 1 : -1; }
     var f = cols.filter(function (c) { return c[0] === sortKey; })[0][2];
     var all = rows.slice().sort(function (a, b) { var x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
@@ -406,10 +412,11 @@
       return "<tr" + (e.isClass || e.isAvg ? " class='refrow'" : "") + "><td>" + (e.isClass ? "<a href='" + esc(e.url) + "'><strong><em>" + esc(e.name) + "</em></strong></a>" :
         e.isAvg ? "<strong><em>" + esc(e.name) + " (" + e.n + ")</em></strong>" : nameLink(e)) +
         (e.flag ? " <span class='badge' title='The site shows a warning about this forecast file'>check file</span>" : "") + "</td>" +
+        scoreCells(e, accText(e)) +
         "<td class='r num'>" + seatCell(e, "H", e.hD) + "</td><td class='r num'>" + chanceCell(e.H.pmaj) + "</td>" +
         "<td class='r num'>" + seatCell(e, "Sn", e.sD) + "</td><td class='r num'>" + chanceCell(e.Sn.pmaj) + "</td>" +
         "<td class='r num'>" + chanceCell(e.both) + "</td>" +
-        "<td class='r num'" + shade(e, "rk") + ">" + accText(e) + "</td>" + callCells(e) + "<td class='r num'>" + esc(e.asof || "") + "</td></tr>";
+        (SCORES ? "" : "<td class='r num'>" + esc(e.asof || "") + "</td>") + "</tr>";
     }
     $("table").innerHTML = head + "<tbody>" + tb + "</tbody>";
     $("score-note").hidden = !SCORES;
@@ -417,13 +424,14 @@
       (RESULT && RESULT.uncalled ? " (" + RESULT.uncalled + " races not yet called, scored on the votes counted so far)" : "") +
       ". Rank: average error in the Democratic share of the two-party vote, in points, over the races scored; lower is better. " +
       "Shading: darker green is better, within the forecasts shown. Races called: winners called right. Close races: decided by under 5 points so far" + (closeN() ? " (" + closeN() + ")" : "") + ". " +
-      "Brier score: how good the win probabilities were in the 90 races expected to be competitive; 0 is perfect, lower is better, blank for forecasts sent without probabilities (the contest average uses the entrants who sent them). " +
+      "Brier score: how good the win probabilities were (0 is perfect, 0.25 is a coin flip, lower is better), in the 90 races expected to be competitive and in all races; " +
+      "the all-races score is the one published scorecards usually report, and runs lower because safe races are easy. Blank for forecasts sent without probabilities (the contest average uses the entrants who sent them). " +
       "A forecast can rank well on vote-share error and still miss seats that were decided by a point or two. " +
       "Rows without race-level vote shares are not ranked.";
     proFootnotes(fnList, all);
     $("table").querySelectorAll("th.sort").forEach(function (th) {
       th.addEventListener("click", function () {
-        var k = th.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "rk" || k === "br") ? 1 : -1; } // error and Brier: lowest first; calls: most first
+        var k = th.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "rk" || k === "br" || k === "ba") ? 1 : -1; } // error and Brier: lowest first; calls: most first
         table(rows);
       });
     });
@@ -478,9 +486,10 @@
     var chance = function (c) { return c.pmaj == null ? "" : (c.pmaj > 0.995 && c.pmaj < 1 ? "&gt;99%" : pct(c.pmaj)) + (c.estP ? dag : ""); };
     var acc = e.err ? accText(e) : SCORES || !e.scorable ? na : "<span class='muted'>after results</span>";
     return "<tr class='refrow'><td><strong><em>" + nameLink(e) + "</em></strong>" + (fnNum[e.name] ? "<sup class='fn'><a href='#fn" + fnNum[e.name] + "'>" + fnNum[e.name] + "</a></sup>" : "") + "</td>" +
+      scoreCells(e, acc) +
       "<td class='r num'>" + seats(e.H, e.hD) + "</td><td class='r num'>" + chance(e.H) + "</td>" +
       "<td class='r num'>" + seats(e.Sn, e.sD) + "</td><td class='r num'>" + chance(e.Sn) + "</td>" +
-      "<td class='r num'></td><td class='r num'" + shade(e, "rk") + ">" + acc + "</td>" + callCells(e) + "<td class='r num'>" + asofCell(e) + "</td></tr>";
+      "<td class='r num'></td>" + (SCORES ? "" : "<td class='r num'>" + asofCell(e) + "</td>") + "</tr>";
   }
   // footnotes, numbered in the order the rows appear in the table
   var fnNum = {};
