@@ -48,7 +48,9 @@
                getCSV("data/scores/result.csv").catch(function () { return null; })])
     .then(function (res) {
       races = res[0]; notup = res[1]; results = res[3];
-      if (res[5] && res[5].length) { SCORES = {}; res[5].forEach(function (r) { var m = FC.num(r.mae); if (m != null && !isNaN(m)) SCORES[r.name] = { mae: m, n: Number(r.n_races), called: FC.num(r.called), close: FC.num(r.close_called), closeN: FC.num(r.close_n) }; }); }
+      if (res[5] && res[5].length) { SCORES = {}; res[5].forEach(function (r) {
+        var m = FC.num(r.mae), b = FC.num(r.brier); m = m != null && !isNaN(m) ? m : null; b = b != null && !isNaN(b) ? b : null;
+        if (m != null || b != null) SCORES[r.name] = { mae: m, n: Number(r.n_races), called: FC.num(r.called), close: FC.num(r.close_called), closeN: FC.num(r.close_n), brier: b }; }); }
       if (res[6] && res[6].length) { RESULT = {}; res[6].forEach(function (r) { var v = Number(r.seats); if (isFinite(v)) { RESULT[r.chamber === "house" ? "H" : "Sn"] = v; RESULT.asof = r.asof; RESULT.uncalled = Number(r.uncalled) || 0; } }); }
       if (closed) {
         $("frozen").innerHTML = "<strong>Entries are closed.</strong> The deadline was 11:59 pm Eastern on Sunday, November 1.";
@@ -129,23 +131,25 @@
   function closeN() { var m = 0; for (var k in SCORES) if (SCORES[k].closeN > m) m = SCORES[k].closeN; return m; }
   function applyScores(rows) {
     if (!SCORES) return;
-    rows.forEach(function (e) { var s = SCORES[e.name]; e.err = s ? { mae: s.mae, n: s.n, called: s.called, close: s.close, closeN: s.closeN } : null; });
+    rows.forEach(function (e) { var s = SCORES[e.name]; e.err = s ? { mae: s.mae, n: s.n, called: s.called, close: s.close, closeN: s.closeN, brier: s.brier } : null; });
   }
   // rank the rows shown (contest entries and benchmarks alike) by error, lowest first; ties share a rank
   function rankAll(rows) {
-    var s = rows.filter(function (e) { return e.err; }).sort(function (a, b) { return a.err.mae - b.err.mae; });
+    var s = rows.filter(function (e) { return e.err && e.err.mae != null; }).sort(function (a, b) { return a.err.mae - b.err.mae; });
     s.forEach(function (e, i) { e.rank = i && Math.abs(e.err.mae - s[i - 1].err.mae) < 1e-9 ? s[i - 1].rank : i + 1; });
   }
   // "races called" and "close races called" cells (only when the scores file is loaded)
   function callCells(e) {
     if (!SCORES) return "";
     var c = e.err, f = function (k, n) { return c && c[k] != null && c[n] ? c[k] + "<span class='muted'>/" + c[n] + "</span>" : ""; };
-    return "<td class='r num'" + shade(e, "rc") + ">" + f("called", "n") + "</td><td class='r num'" + shade(e, "cc") + ">" + f("close", "closeN") + "</td>";
+    return "<td class='r num'" + shade(e, "rc") + ">" + f("called", "n") + "</td><td class='r num'" + shade(e, "cc") + ">" + f("close", "closeN") + "</td>" +
+      "<td class='r num'" + shade(e, "br") + ">" + (c && c.brier != null ? c.brier.toFixed(3) : "") + "</td>";
   }
   // shading of the score cells: one hue, darker = better, by rank within the rows shown (so one far-off forecast,
   // like Fair, does not wash out everyone else); ties share a shade. SHADE is rebuilt by table() for each view.
   var SHADE = {};
-  var SCORE_KEYS = { rk: function (e) { return e.err ? -e.err.mae : null; },
+  var SCORE_KEYS = { rk: function (e) { return e.err && e.err.mae != null ? -e.err.mae : null; },
+                     br: function (e) { return e.err && e.err.brier != null ? -e.err.brier : null; },
                      rc: function (e) { return e.err && e.err.called != null && e.err.n ? e.err.called / e.err.n : null; },
                      cc: function (e) { return e.err && e.err.close != null && e.err.closeN ? e.err.close / e.err.closeN : null; } };
   function buildShades(rows) {
@@ -164,7 +168,7 @@
     return t == null ? "" : " style='background:color-mix(in srgb, var(--score) " + Math.round(6 + 34 * t) + "%, transparent)'";
   }
   function accText(e) {
-    if (!e.err) return SCORES ? "" : "<span class='muted'>after results</span>";
+    if (!e.err || e.err.mae == null) return SCORES ? "" : "<span class='muted'>after results</span>";
     return e.rank + " <span class='muted'>(" + e.err.mae.toFixed(2) + " pts)</span>";
   }
 
@@ -381,12 +385,13 @@
       ["ss", "Senate seats: projected (median)", function (e) { return e.Sn.none ? -1 : e.Sn.med; }],
       ["sp", "Senate: D control", function (e) { return e.Sn.pmaj == null ? -1 : e.Sn.pmaj; }],
       ["both", "Both chambers: D", function (e) { return e.both == null ? -1 : e.both; }],
-      ["rk", "Accuracy rank (avg. error)", function (e) { return e.err ? e.err.mae : 1e9; }],
+      ["rk", "Accuracy rank (avg. error)", function (e) { return e.err && e.err.mae != null ? e.err.mae : 1e9; }],
       ["rc", "Races called", function (e) { return e.err && e.err.called != null ? e.err.called / e.err.n : -1; }],
       ["cc", "Close races called", function (e) { return e.err && e.err.close != null ? e.err.close / e.err.closeN : -1; }],
+      ["br", "Brier score", function (e) { return e.err && e.err.brier != null ? e.err.brier : 1e9; }],
       ["as", "As of", function (e) { return e.asof || ""; }]
     ];
-    if (!SCORES) cols = cols.filter(function (c) { return c[0] !== "rc" && c[0] !== "cc"; }); // the calls columns come with the scores
+    if (!SCORES) cols = cols.filter(function (c) { return c[0] !== "rc" && c[0] !== "cc" && c[0] !== "br"; }); // the calls columns come with the scores
     if (!sortKey) { var scored = rows.some(function (e) { return e.err; }); sortKey = scored ? "rk" : "hs"; sortDir = scored ? 1 : -1; }
     var f = cols.filter(function (c) { return c[0] === sortKey; })[0][2];
     var all = rows.slice().sort(function (a, b) { var x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
@@ -412,12 +417,13 @@
       (RESULT && RESULT.uncalled ? " (" + RESULT.uncalled + " races not yet called, scored on the votes counted so far)" : "") +
       ". Rank: average error in the Democratic share of the two-party vote, in points, over the races scored; lower is better. " +
       "Shading: darker green is better, within the forecasts shown. Races called: winners called right. Close races: decided by under 5 points so far" + (closeN() ? " (" + closeN() + ")" : "") + ". " +
+      "Brier score: how good the win probabilities were in the 90 races expected to be competitive; 0 is perfect, lower is better, blank for forecasts sent without probabilities (the contest average uses the entrants who sent them). " +
       "A forecast can rank well on vote-share error and still miss seats that were decided by a point or two. " +
       "Rows without race-level vote shares are not ranked.";
     proFootnotes(fnList, all);
     $("table").querySelectorAll("th.sort").forEach(function (th) {
       th.addEventListener("click", function () {
-        var k = th.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "rk") ? 1 : -1; } // calls: most first
+        var k = th.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "rk" || k === "br") ? 1 : -1; } // error and Brier: lowest first; calls: most first
         table(rows);
       });
     });

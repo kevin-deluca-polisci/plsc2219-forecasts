@@ -1,27 +1,28 @@
-name,mae,n_races,called,close_called,close_n
-Agora,2.80,451,423,50,71
-Shiro K.,3.00,451,415,52,71
-Class Fundamentals + Polls,3.05,451,418,50,71
-Rick,3.20,451,420,51,71
-Split Ticket,3.20,450,421,49,70
-Charlie,3.20,451,427,53,71
-Class Fundamentals Model,3.21,451,413,49,71
-The Last Neocon,3.29,451,419,50,71
-Yi,3.34,451,412,51,71
-ElectIt (Harvard),3.35,450,421,49,70
-Contest average,3.42,451,419,50,71
-S01 Midterm Model,3.45,451,412,49,71
-333,3.51,451,420,52,71
-S26,3.57,451,412,49,71
-florida_man_05,3.65,451,409,46,71
-Footloose,3.73,451,415,50,71
-Sonja,3.73,451,414,49,71
-S31,3.81,451,417,50,71
-Forecaster2619,3.85,451,415,49,71
-Aharon,3.86,451,409,47,71
-LeBron-Saved-My-Life,3.93,451,412,47,71
-Nate Silver 2.0,4.28,451,407,46,71
-midterm-forecaster-620,4.28,451,408,45,71
-Sasha,4.37,451,414,51,71
-Willdh,4.50,451,420,52,71
-Fair model (to seats),5.69,450,395,43,70
+name,mae,n_races,called,close_called,close_n,brier
+Agora,2.80,451,423,50,71,
+Shiro K.,3.00,451,415,52,71,
+Class Fundamentals + Polls,3.05,451,418,50,71,0.0838
+Rick,3.20,451,420,51,71,0.0663
+Split Ticket,3.20,450,421,49,70,0.0693
+Charlie,3.20,451,427,53,71,0.0640
+Class Fundamentals Model,3.21,451,413,49,71,0.0918
+The Last Neocon,3.29,451,419,50,71,0.0686
+Yi,3.34,451,412,51,71,
+ElectIt (Harvard),3.35,450,421,49,70,0.0623
+Contest average,3.42,451,419,50,71,0.0886
+S01 Midterm Model,3.45,451,412,49,71,0.1022
+333,3.51,451,420,52,71,
+S26,3.57,451,412,49,71,
+florida_man_05,3.65,451,409,46,71,0.1110
+Footloose,3.73,451,415,50,71,0.0914
+Sonja,3.73,451,414,49,71,0.0991
+S31,3.81,451,417,50,71,0.0800
+Forecaster2619,3.85,451,415,49,71,0.0976
+Aharon,3.86,451,409,47,71,0.1101
+LeBron-Saved-My-Life,3.93,451,412,47,71,0.0956
+Nate Silver 2.0,4.28,451,407,46,71,0.1373
+midterm-forecaster-620,4.28,451,408,45,71,0.1231
+Sasha,4.37,451,414,51,71,0.1075
+Willdh,4.50,451,420,52,71,0.0899
+Fair model (to seats),5.69,450,395,43,70,0.2248
+FiftyPlusOne,,,,,,0.0475
